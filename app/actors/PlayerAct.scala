@@ -2,19 +2,22 @@ package app.actors
 
 import akka.actor.{Actor, ActorRef, PoisonPill}
 import akka.io.Tcp.{PeerClosed, Received, Write}
-import akka.util.ByteString
+import akka.util.{ByteString, Timeout}
 import app.Settings
 import app.Settings.ActorPath
+import akka.pattern.ask
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 class PlayerAct extends Actor{
 
+  import utils.sqlutils.SQLActor._
   import LoginActor._
   import utils.parsing.ParserServ._
-  var boss:ActorRef = null
 
+  implicit val timeout: Timeout = new Timeout(Duration.create(5, "seconds"))
 
-  override def preStart(): Unit ={
-  }
 
   def receive: PartialFunction[Any, Unit] = {
     //Проверка на полси - отдаёт пустой пакет обратно
@@ -30,7 +33,9 @@ class PlayerAct extends Actor{
       //здесь по номеру пакета свичимся на нужную логику
 
       case 100 =>
-        println (data + sender().path.name)
+        val future = context.actorSelection(ActorPath("SQL")) ? SearchProps(1, "idPlayer" ,"Player")
+        val result = Await.result(future, timeout.duration).asInstanceOf[Int]
+        println("id of admin is "+ result)
         context.actorSelection (ActorPath ("Login") ) ! LoginData (data, sender ())
 
 

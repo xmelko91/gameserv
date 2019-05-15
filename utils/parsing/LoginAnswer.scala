@@ -1,42 +1,50 @@
 package utils.parsing
 
+
 import akka.util.ByteString
 import app.actors.LoginActor.LoginAnswerOut
+import utils.sqlutils.SQLActor.PlayerLoginStats
+
+import scala.io.Source
+import scala.util.control.Breaks
 
 object LoginAnswer {
 
+
+  import app.Settings._
   import DataFunc._
 
-  def pocket100Answer(NumberOfPocket:Short,
-                      Size:Short,
-                      LoginId1: Int,
-                      LoginAccountId: Int,
-                      LoginId2: Int,
-                      NumSlots: Byte,
-                      PremiumType:Byte,
-                      PremiumUntil: Int,
+
+  var adress1:Byte = TCP_IP._1
+  var adress2:Byte = TCP_IP._2
+  var adress3:Byte = TCP_IP._3
+  var adress4:Byte = TCP_IP._4
+  var port: Short = TCP_IP._5
+
+
+  val NumberOfPocket:Short = 105
+  val ExtraEmptyBytes: Int = 20
+  val SexOld: Byte = 0
+
+
+  def pocket105Answer(Size:Short, Stats: PlayerLoginStats,
                       HbmVersion: Int,
-                      ExtraEmptyBytes: Int,
-                      SexOld: Byte,
-                      adress1:Byte,
-                      adress2:Byte,
-                      adress3:Byte,
-                      adress4:Byte,
-                      port: Short,
                       name: String,
                       nameBuf: Int,
                       users: Short,
                       maintenance: Short,
                       New: Short
                   ):LoginAnswerOut = {
+
+
     val arr = shortToByteArray(NumberOfPocket) ++
       shortToByteArray(Size) ++
-      intToByteArray(LoginId1) ++
-      intToByteArray(LoginAccountId) ++
-      intToByteArray(LoginId2) ++
-      byteToByteArray(NumSlots) ++
-      byteToByteArray(PremiumType) ++
-      intToByteArray(PremiumUntil) ++
+      intToByteArray(Stats.loginId1) ++
+      intToByteArray(Stats.loginAccId) ++
+      intToByteArray(Stats.loginId2) ++
+      byteToByteArray(Stats.numSlots) ++
+      byteToByteArray(Stats.premiumType) ++
+      intToByteArray(Stats.premiumUntil) ++
       intToByteArray(HbmVersion) ++
       new Array[Byte](ExtraEmptyBytes) ++
       byteToByteArray(SexOld) ++
@@ -54,8 +62,7 @@ object LoginAnswer {
   }
 
   def pocket101Answer(): LoginAnswerOut = {
-    val arr =
-
+    val arr = ???
       LoginAnswerOut(arr)
   }
 
