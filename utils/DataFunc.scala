@@ -4,6 +4,16 @@ import java.nio.ByteBuffer
 
 object DataFunc {
 
+  def stringToByteArray = (str: String, buf: Int) => {
+    val out = new Array[Byte](buf)
+    val strArr = str.toCharArray
+    for (i <- out.indices){
+      if (i < strArr.length) out(i) = strArr(i).toByte
+      else out(i) = 0
+    }
+    out
+  }
+
   def shortToByteArray = (value:Short) =>
     ByteBuffer
       .allocate(2)

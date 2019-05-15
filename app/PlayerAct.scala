@@ -34,7 +34,7 @@ class PlayerAct extends Actor{
         context.actorSelection (ActorPath ("Login") ) ! LoginData (data, sender ())
 
 
-      case _ => println("Необработаный пакет")
+      case _ => println("Необработаный пакет № " + pocketNumber(data))
     }
 
 

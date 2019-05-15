@@ -13,7 +13,9 @@ class LoginActor extends Actor{
     case LoginData(data, ref) =>
       //получает распарсенную дату, кортеж в виде всех полей
       val parsedData = parseLogIn(data)
-      val out = composeArray(105, 47,11,2704328,12034,1,1,1,1,10,20)
+      val out = pocket100Answer(
+        105, 79,111,112,113,1,1,100,22243,20,0,
+        127, 0, 0, 1, 2973, "darkness01", 20, 66, 55, 44)
       println(out.data + ref.path.name)
       ref ! Write(out.data)
     case a@_ => println(a)

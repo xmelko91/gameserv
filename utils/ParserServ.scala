@@ -21,7 +21,12 @@ object ParserServ {
   }
 
   //читает первый Шорт
-  def pocketNumber(data:ByteString) = readShort(new ByteArrayInputStream(data.toArray).readNBytes(2))
+  def pocketNumber(data:ByteString) = {
+    val buf = new ByteArrayInputStream(data.toArray)
+    val out = readShort(buf.readNBytes(2))
+    buf.close()
+    out
+  }
 
   case class ParsedData(short:Short, int: Int, email:String, password:String)
 }
