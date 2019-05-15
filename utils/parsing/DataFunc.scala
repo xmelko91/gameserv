@@ -1,4 +1,4 @@
-package utils
+package utils.parsing
 
 import java.nio.ByteBuffer
 

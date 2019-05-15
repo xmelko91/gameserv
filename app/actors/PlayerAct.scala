@@ -1,15 +1,15 @@
-package app
-
+package app.actors
 
 import akka.actor.{Actor, ActorRef, PoisonPill}
-import Settings._
 import akka.io.Tcp.{PeerClosed, Received, Write}
 import akka.util.ByteString
+import app.Settings
+import app.Settings.ActorPath
 
 class PlayerAct extends Actor{
 
-  import utils.ParserServ._
   import LoginActor._
+  import utils.parsing.ParserServ._
   var boss:ActorRef = null
 
 

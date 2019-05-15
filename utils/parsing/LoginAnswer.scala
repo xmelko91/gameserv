@@ -1,10 +1,7 @@
-package utils
-import java.nio._
+package utils.parsing
 
 import akka.util.ByteString
-import app.LoginActor.LoginAnswerOut
-
-import scala.collection.mutable.ArrayBuffer
+import app.actors.LoginActor.LoginAnswerOut
 
 object LoginAnswer {
 
@@ -54,6 +51,12 @@ object LoginAnswer {
       shortToByteArray(New)
     println(arr.length)
     LoginAnswerOut(ByteString(arr))
+  }
+
+  def pocket101Answer(): LoginAnswerOut = {
+    val arr =
+
+      LoginAnswerOut(arr)
   }
 
 }

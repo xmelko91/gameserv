@@ -2,6 +2,7 @@ package app
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
+import app.actors.{LoginActor, WebServer}
 
 import scala.concurrent.ExecutionContextExecutor
 

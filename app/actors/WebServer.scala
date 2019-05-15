@@ -1,4 +1,4 @@
-package app
+package app.actors
 
 import java.net.InetSocketAddress
 

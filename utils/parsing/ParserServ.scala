@@ -1,7 +1,6 @@
-package utils
+package utils.parsing
 
 import java.io.ByteArrayInputStream
-import java.nio.ByteBuffer
 
 import akka.util.ByteString
 
