@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef}
 import akka.io.Tcp.Write
 import akka.util.{ByteString, Timeout}
 import app.Settings.ActorPath
-import utils.parsing.LoginAnswer._
+import utils.answers.LoginAnswer._
 import utils.sqlutils.SQLActor.{PlayerLoginStats, SearchProps}
 
 import scala.concurrent.Await

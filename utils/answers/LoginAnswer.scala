@@ -1,18 +1,15 @@
-package utils.parsing
-
+package utils.answers
 
 import akka.util.ByteString
 import app.actors.LoginActor.LoginAnswerOut
+import utils.parsing.DataFunc
 import utils.sqlutils.SQLActor.PlayerLoginStats
-
-import scala.io.Source
-import scala.util.control.Breaks
 
 object LoginAnswer {
 
 
-  import app.Settings._
   import DataFunc._
+  import app.Settings._
 
 
   var adress1:Byte = TCP_IP._1
@@ -20,11 +17,6 @@ object LoginAnswer {
   var adress3:Byte = TCP_IP._3
   var adress4:Byte = TCP_IP._4
   var port: Short = TCP_IP._5
-
-
-  val NumberOfPocket:Short = 105
-  val ExtraEmptyBytes: Int = 20
-  val SexOld: Byte = 0
 
 
   def pocket105Answer(Size:Short, Stats: PlayerLoginStats,
@@ -37,7 +29,7 @@ object LoginAnswer {
                   ):LoginAnswerOut = {
 
 
-    val arr = shortToByteArray(NumberOfPocket) ++
+    val arr = shortToByteArray(105) ++
       shortToByteArray(Size) ++
       intToByteArray(Stats.loginId1) ++
       intToByteArray(Stats.loginAccId) ++
@@ -46,8 +38,8 @@ object LoginAnswer {
       byteToByteArray(Stats.premiumType) ++
       intToByteArray(Stats.premiumUntil) ++
       intToByteArray(HbmVersion) ++
-      new Array[Byte](ExtraEmptyBytes) ++
-      byteToByteArray(SexOld) ++
+      new Array[Byte](20) ++
+      byteToByteArray(0) ++
       byteToByteArray(adress1) ++
       byteToByteArray(adress2) ++
       byteToByteArray(adress3) ++
@@ -61,9 +53,32 @@ object LoginAnswer {
     LoginAnswerOut(ByteString(arr))
   }
 
-  def pocket101Answer(): LoginAnswerOut = {
-    val arr = ???
-      LoginAnswerOut(arr)
+  def pocket106Answer(Errors:Byte,
+                      Message_Errors: String
+                     ): LoginAnswerOut = {
+    val arr = shortToByteArray(106) ++
+      byteToByteArray(Errors) ++
+      stringToByteArray(Message_Errors, 20)
+    LoginAnswerOut(ByteString(arr))
+  }
+
+  def pocket110Answer(Errors:Byte): LoginAnswerOut = {
+    val arr = shortToByteArray(110) ++
+      byteToByteArray(Errors)
+    LoginAnswerOut(ByteString(arr))
+  }
+
+  def pocket113Answer(CharacterId: Int,
+                      MapName: String): LoginAnswerOut = {
+    val arr = shortToByteArray(113) ++
+      intToByteArray(CharacterId) ++
+      stringToByteArray(MapName, 16) ++
+      byteToByteArray(127) ++
+      byteToByteArray(0) ++
+      byteToByteArray(0) ++
+      byteToByteArray(1) ++
+      shortToByteArray(2970)
+    LoginAnswerOut(ByteString(arr))
   }
 
 }

@@ -37,7 +37,7 @@ object main extends App{
     case  e => e.printStackTrace()
   }
 
-  val tcpSerrv = actorSystem.actorOf(Props(classOf[WebServer], "localhost", 2973))
+  val tcpServ = actorSystem.actorOf(Props(classOf[WebServer], "localhost", TCP_IP._5.intValue()))
   val loginActor = actorSystem.actorOf(Props(classOf[LoginActor]), name = "Login")
   val sqlActor = actorSystem.actorOf(Props(classOf[SQLActor]), name = "SQL")
   println(loginActor.path)

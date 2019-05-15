@@ -14,6 +14,7 @@ class PlayerAct extends Actor{
 
   import utils.sqlutils.SQLActor._
   import LoginActor._
+  import utils.answers.LoginAnswer._
   import utils.parsing.ParserServ._
 
   implicit val timeout: Timeout = new Timeout(Duration.create(5, "seconds"))
@@ -38,6 +39,9 @@ class PlayerAct extends Actor{
         println("id of admin is "+ result)
         context.actorSelection (ActorPath ("Login") ) ! LoginData (data, sender ())
 
+      case 101 =>
+        println("whs mzfk")
+        sender() ! pocket106Answer(1, "banned")
 
       case _ => println("Необработаный пакет № " + pocketNumber(data))
     }
