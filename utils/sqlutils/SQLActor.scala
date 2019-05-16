@@ -1,7 +1,7 @@
 package utils.sqlutils
 
 import java.sql
-import java.sql.DriverManager
+import java.sql.{Date, DriverManager}
 
 import akka.actor.Actor
 import app.actors.LoginActor.CheckUserInDB
@@ -10,11 +10,12 @@ import scala.util.control.Breaks
 
 class SQLActor extends Actor{
   import SQLActor._
+  import app.Settings._
 
-  val url = "jdbc:mysql://localhost/serverDB"
+  val url: String = "jdbc:mysql://localhost/" + dbName
   val driver = "com.mysql.jdbc.Driver"
-  val username = "serge"
-  val password = "password"
+  val username: String = nmSQL
+  val password: String = pswSQL
   var connection:sql.Connection = _
 
   def connect(): Unit = {
@@ -39,6 +40,7 @@ class SQLActor extends Actor{
 
 
     case CheckUserInDB(login, pass) =>
+      println(login + "    " + pass)
       if (connection == null || connection.isClosed) connect()
       try {
         val statement = connection.createStatement()
@@ -53,17 +55,18 @@ class SQLActor extends Actor{
         val numSlots = rs.getByte("numSlots")
         val premiumType = rs.getByte("premiumType")
         val premiumUntil = rs.getInt("premiumUntil")
+        val banned = rs.getDate("Baned")
 
-        sender() ! PlayerLoginStats(loginId1, loginAccId, loginId2, numSlots, premiumType, premiumUntil)
+        sender() ! PlayerLoginStats(loginId1, loginAccId, loginId2, numSlots, premiumType, premiumUntil, banned)
 
       }catch {
-        case e => sender() ! PlayerLoginStats(-1,0,0,0,0,0)
+        case e => sender() ! PlayerLoginStats(-1,0,0,0,0,0,null)
       }
   }
 }
 
 object SQLActor{
-  case class PlayerLoginStats(loginId1: Int, loginAccId: Int, loginId2: Int, numSlots: Byte, premiumType: Byte, premiumUntil: Int)
+  case class PlayerLoginStats(loginId1: Int, loginAccId: Int, loginId2: Int, numSlots: Byte, premiumType: Byte, premiumUntil: Int, banned : Date)
   case class SearchProps(id:Any, param:String, table:String)
   case class InsertProps()
 }

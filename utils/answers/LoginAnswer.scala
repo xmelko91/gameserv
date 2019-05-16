@@ -5,10 +5,9 @@ import app.actors.LoginActor.LoginAnswerOut
 import utils.parsing.DataFunc
 import utils.sqlutils.SQLActor.PlayerLoginStats
 
-object LoginAnswer {
+trait LoginAnswer extends DataFunc {
 
 
-  import DataFunc._
   import app.Settings._
 
 
@@ -19,13 +18,13 @@ object LoginAnswer {
   var port: Short = TCP_IP._5
 
 
-  def pocket105Answer(Size:Short, Stats: PlayerLoginStats,
-                      HbmVersion: Int,
+  def pocket105Answer(Size:Int, Stats: PlayerLoginStats,
+                      HbmVersion: Long,
                       name: String,
-                      nameBuf: Int,
-                      users: Short,
-                      maintenance: Short,
-                      New: Short
+                      nameBuf: Long,
+                      users: Int,
+                      maintenance: Int,
+                      New: Int
                   ):LoginAnswerOut = {
 
 
@@ -62,22 +61,79 @@ object LoginAnswer {
     LoginAnswerOut(ByteString(arr))
   }
 
+  def pocket109Answer(CharacterId:Long,
+                      BaseExp: Long,
+                      Money: Long,
+                      JobExp: Long,
+                      JobLevel: Int,
+                      hp: Int,
+                      maxHp: Int,
+                      sp: Int,
+                      maxSp: Int,
+                      JobId: Int,
+                      _local_3: Int,
+                      baseLevel: Int,
+                      hairColor: Int,
+                      clothesColor: Int,
+                      NickName: String,
+                      _str: Byte,
+                      _agi: Byte,
+                      _vit: Byte,
+                      _int: Byte,
+                      _dex: Byte,
+                      _luk: Byte,
+                      _slot: Int,
+                      _renames: Int): LoginAnswerOut = {
+    val arr = shortToByteArray(109) ++
+      intToByteArray(CharacterId) ++
+      intToByteArray(BaseExp) ++
+      intToByteArray(Money) ++
+      intToByteArray(JobExp) ++
+      shortToByteArray(JobLevel) ++
+      shortToByteArray(hp) ++
+      shortToByteArray(maxHp) ++
+      shortToByteArray(sp) ++
+      shortToByteArray(maxSp) ++
+      shortToByteArray(JobId) ++
+      shortToByteArray(_local_3) ++
+      shortToByteArray(baseLevel) ++
+      shortToByteArray(hairColor) ++
+      shortToByteArray(clothesColor) ++
+      stringToByteArray(NickName, 24) ++
+      byteToByteArray(_str) ++
+      byteToByteArray(_agi) ++
+      byteToByteArray(_vit) ++
+      byteToByteArray(_int) ++
+      byteToByteArray(_dex) ++
+      byteToByteArray(_luk) ++
+      shortToByteArray(_slot) ++
+      shortToByteArray(_renames)
+    LoginAnswerOut(ByteString(arr))
+  }
+
   def pocket110Answer(Errors:Byte): LoginAnswerOut = {
     val arr = shortToByteArray(110) ++
       byteToByteArray(Errors)
     LoginAnswerOut(ByteString(arr))
   }
 
-  def pocket113Answer(CharacterId: Int,
+  def pocket113Answer(CharacterId: Long,
                       MapName: String): LoginAnswerOut = {
     val arr = shortToByteArray(113) ++
       intToByteArray(CharacterId) ++
       stringToByteArray(MapName, 16) ++
-      byteToByteArray(127) ++
-      byteToByteArray(0) ++
-      byteToByteArray(0) ++
-      byteToByteArray(1) ++
-      shortToByteArray(2970)
+      byteToByteArray(TCP_IP._1) ++
+      byteToByteArray(TCP_IP._2) ++
+      byteToByteArray(TCP_IP._3) ++
+      byteToByteArray(TCP_IP._4) ++
+      shortToByteArray(TCP_IP._5)
+    LoginAnswerOut(ByteString(arr))
+  }
+
+  def pocket115Answer(int : Long, short: Int) = {
+    val  arr = shortToByteArray(115) ++
+      intToByteArray(int) ++
+      shortToByteArray(short)
     LoginAnswerOut(ByteString(arr))
   }
 

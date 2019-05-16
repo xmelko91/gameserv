@@ -6,17 +6,17 @@ import akka.util.{ByteString, Timeout}
 import app.Settings
 import app.Settings.ActorPath
 import akka.pattern.ask
+import utils.answers.LoginAnswer
+import utils.parsing.ParserServ
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class PlayerAct extends Actor{
+class PlayerAct extends Actor
+  with ParserServ
+  with LoginAnswer{
 
-  import utils.sqlutils.SQLActor._
   import LoginActor._
-  import utils.answers.LoginAnswer._
-  import utils.parsing.ParserServ._
-
   implicit val timeout: Timeout = new Timeout(Duration.create(5, "seconds"))
 
 
@@ -34,14 +34,16 @@ class PlayerAct extends Actor{
       //здесь по номеру пакета свичимся на нужную логику
 
       case 100 =>
+        /*
         val future = context.actorSelection(ActorPath("SQL")) ? SearchProps(1, "idPlayer" ,"Player")
         val result = Await.result(future, timeout.duration).asInstanceOf[Int]
-        println("id of admin is "+ result)
+        println("id of admin is "+ result)*///sql-ask
         context.actorSelection (ActorPath ("Login") ) ! LoginData (data, sender ())
 
       case 101 =>
-        println("whs mzfk")
-        sender() ! pocket106Answer(1, "banned")
+        println("send 101 to login")
+        sender() ! Write(pocket113Answer(1, "banned").data)
+        sender() ! Write(pocket115Answer(1, 12).data)
 
       case _ => println("Необработаный пакет № " + pocketNumber(data))
     }
