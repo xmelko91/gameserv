@@ -26,6 +26,7 @@ class WebServer(address: String, port: Int) extends Actor{
     case _ => print("asdsasd")
   }
 
+  override def postStop(): Unit = println("Web Server Actor died.")
 
 }
 

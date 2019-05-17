@@ -1,6 +1,6 @@
 package app.actors
 
-import akka.actor.{Actor, ActorRef, PoisonPill}
+import akka.actor.{Actor, ActorRef, ActorSelection, PoisonPill}
 import akka.io.Tcp.{PeerClosed, Received, Write}
 import akka.util.{ByteString, Timeout}
 import app.Settings
@@ -8,8 +8,6 @@ import app.Settings.ActorPath
 import akka.pattern.ask
 import utils.answers.LoginAnswer
 import utils.parsing.ParserServ
-
-import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class PlayerAct extends Actor
@@ -34,16 +32,14 @@ class PlayerAct extends Actor
       //здесь по номеру пакета свичимся на нужную логику
 
       case 100 =>
-        /*
-        val future = context.actorSelection(ActorPath("SQL")) ? SearchProps(1, "idPlayer" ,"Player")
-        val result = Await.result(future, timeout.duration).asInstanceOf[Int]
-        println("id of admin is "+ result)*///sql-ask
-        context.actorSelection (ActorPath ("Login") ) ! LoginData (data, sender ())
-
+        println("GET")
+        LoginSend ! LoginData(data, sender())
       case 101 =>
-        println("send 101 to login")
-        sender() ! Write(pocket113Answer(1, "banned").data)
-        sender() ! Write(pocket115Answer(1, 12).data)
+        println("101 is here")
+        LoginSend ! UserBaseInfo(data, sender())
+      case 103 =>
+        println("103 here")
+        LoginSend ! NewUserInfo(data, sender())
 
       case _ => println("Необработаный пакет № " + pocketNumber(data))
     }
@@ -52,8 +48,11 @@ class PlayerAct extends Actor
     //Конец жизни Актора
     case PeerClosed     => {
       context.stop(self)
-      println("actor died")
+      println("Player actor died")
       self ! PoisonPill
     }
   }
+
+  def LoginSend: ActorSelection = context.actorSelection (ActorPath ("Login"))
+  def SqlSend: ActorSelection = context.actorSelection (ActorPath ("SQL"))
 }

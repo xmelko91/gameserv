@@ -1,5 +1,5 @@
 package utils.answers
 
-object CharacterAnswer {
+trait CharacterAnswer {
 
 }
