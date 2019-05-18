@@ -37,6 +37,8 @@ class PlayerAct extends Actor
       case 101 =>
         println("101 is here")
         LoginSend ! UserBaseInfo(data, sender())
+      case 102 =>
+        LoginSend ! Slot(data, sender())
       case 103 =>
         println("103 here")
         LoginSend ! NewUserInfo(data, sender())

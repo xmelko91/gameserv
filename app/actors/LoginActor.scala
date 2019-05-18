@@ -1,19 +1,19 @@
 package app.actors
 
-import java.sql.Date
 import java.time.{LocalDate, LocalDateTime}
 
 import akka.actor.{Actor, ActorRef, ActorSelection}
 import akka.io.Tcp.Write
 import akka.util.{ByteString, Timeout}
 import app.Settings.ActorPath
-import utils.sqlutils.SQLActor.{AddNewCharacter, AddNewPlayer, PlayerLoginStats, SearchProps}
+import utils.sqlutils.SQLActor.{AddNewCharacter, AddNewPlayer, AllChars, PlayerLoginStats, SearchProps}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import akka.pattern.ask
 import app.PocketLogic.CheckBase
-import app.actors.LoginActor.UserInfo
+import app.actors.LoginActor.{NewUserId, UserInfo}
+import utils.answers.CharacterAnswer.CharStats
 import utils.answers.{CharacterAnswer, LoginAnswer}
 import utils.parsing.ParserServ
 
@@ -26,7 +26,9 @@ class LoginActor extends Actor
   with CheckBase {
 
   private implicit val newUserData: ArrayBuffer[UserInfo] = new ArrayBuffer[UserInfo]()
+  private implicit val UserId: ArrayBuffer[NewUserId] = new ArrayBuffer[NewUserId]()
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
+
   import LoginActor._
 
 
@@ -35,7 +37,7 @@ class LoginActor extends Actor
       //получает распарсенную дату, кортеж в виде всех полей
       val parsedData = parsePocket100(data)
       println(parsedData._bytes)
-      val info = UserInfo(parsedData.email,parsedData.password,ref)
+      val info = UserInfo(parsedData.email, parsedData.password, ref)
 
       //проверяем и добавляем в буфер не зареганых юзеров
       isInfoInMemory(info)
@@ -43,7 +45,7 @@ class LoginActor extends Actor
       //
 
       if (checkUserEmail(parsedData.email, parsedData.password)) {
-        if (parsedData.email.charAt(parsedData.email.length - 1) == '|'){
+        if (parsedData.email.charAt(parsedData.email.length - 1) == '|') {
           ref ! Write(pocket110Answer(2).data)
         }
         else {
@@ -69,7 +71,7 @@ class LoginActor extends Actor
       }
     }
 
-    case NewUserInfo(data, ref) =>
+    case NewUserInfo(data, ref) => {
       val parsedData = parsePocket103(data)
       if (parsedData.summ == 0) {
         if (!checkUserNickname(parsedData._nickname)) {
@@ -77,7 +79,7 @@ class LoginActor extends Actor
           ref ! Write(pocket110Answer(253).data)
         }
         else {
-          val future = SqlSend ? SearchProps(parsedData._nickname,"name", "char_account")
+          val future = SqlSend ? SearchProps(parsedData._nickname, "name", "char_account")
           val result = Await.result(future, timeout.duration).asInstanceOf[String]
           println(result + " --- 1" + parsedData._nickname)
           if (result.equals(parsedData._nickname)) {
@@ -89,14 +91,14 @@ class LoginActor extends Actor
           }
         }
       }
-      else if (parsedData.summ == 30){
-        val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF) // пол персонажа
+      else if (parsedData.summ == 30) {
+        val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF)// пол персонажа
         val job = getJobFract(parsedData._jobid) // фракция и класс
 
         println(parsedData._jobid + "   " + job)
 
         val userInfo: UserInfo = getFromUserData(ref)
-        implicit val info: UserInfo = UserInfo(userInfo.login.replace("|",""), userInfo.password, userInfo.ref)
+        implicit val info: UserInfo = UserInfo(userInfo.login.replace("|", ""), userInfo.password, userInfo.ref)
 
         //создаётся новый логин в базе
         val future = SqlSend ? AddNewPlayer(info)
@@ -104,15 +106,18 @@ class LoginActor extends Actor
 
         if (result == -1) Write(pocket110Answer(250).data) // ошибка бд
         else {
-          isInfoInMemory(userInfo)
+          //isInfoInMemory(userInfo)
           //создаётся новый чар в базе
           println("Adding new character")
 
-          val characterInfo = CharacterInfo(parsedData._nickname, job.jobId, isMale.shortValue(), job.fraction, 0)
+          val characterInfo = CharacterInfo(parsedData._nickname, job.jobId, isMale.shortValue(), job.fraction, 1, parsedData._slotid)
 
           val future = SqlSend ? AddNewCharacter(info, characterInfo)
           val result = Await.result(future, timeout.duration).asInstanceOf[(Long, Long)]
+          val loginID = result._2
           val charID = result._1
+
+          UserId += NewUserId(loginID, charID, characterInfo, ref)
 
           if (charID == -1) Write(pocket110Answer(250).data) // ошибка бд
           else {
@@ -123,13 +128,26 @@ class LoginActor extends Actor
           }
         }
       }
-
-
+    }
 
     case UserBaseInfo(data, ref) =>
     //val parsedData = parsePocket101(data)
     //println(parsedData.loginAccountId)
 
+    case Slot(data, ref) => {
+      var slot = 0
+
+      if (data.length > 2){
+        slot = parsePocket102(data)._slotid
+      }
+      println(data.length)
+      val userData = getFromUserId(ref)
+
+      val future = SqlSend ? AllChars(userData.userId, slot)
+      val result = Await.result(future, timeout.duration).asInstanceOf[Array[CharStats]]
+
+      ref ! Write(pocket107Answer(result, slot).data)
+    }
 
     case a@_ => println(a)
   }
@@ -137,14 +155,18 @@ class LoginActor extends Actor
   override def postStop(): Unit = println("LoginActor died.")
 
 
-  def SqlSend: ActorSelection = context.actorSelection (ActorPath ("SQL"))
+  def SqlSend: ActorSelection = context.actorSelection(ActorPath("SQL"))
 }
 
 object LoginActor {
 
-  case class CharacterInfo(name: String, jobId: Int, local3: Short, clothesColor: Short, hairColor: Short,slot: Short = 2)
+  case class Slot(slot: ByteString, ref: ActorRef)
+
+  case class CharacterInfo(name: String, jobId: Int, local3: Short, clothesColor: Short, hairColor: Short, slot: Short)
 
   case class UserInfo(login: String, password: String, ref: ActorRef)
+
+  case class NewUserId(userId: Long, charId: Long, characterInfo: CharacterInfo, ref: ActorRef)
 
   case class UserBaseInfo(data: ByteString, actorRef: ActorRef)
 

@@ -7,17 +7,26 @@ import scala.collection.mutable.ArrayBuffer
 
 trait DataFunc {
 
-  def stringToByteArray = (str: String, buf: Long) => {
+  def stringToByteArray: (String, Long) => Array[Byte] = (str: String, buf: Long) => {
     val out = new Array[Byte](buf.intValue())
     val strArr = str.toCharArray
     for (i <- out.indices) {
-      if (i < strArr.length) out(i) = strArr(i).toByte
+      if (i < strArr.length) out(i) = {
+        val c = strArr(i).toByte
+        if (c.toByte == 'ё'.toByte) (- 72).byteValue()
+        else if(c.toByte == 'Ё'.toByte) (-88).byteValue()
+        else if (c.toByte >= 'а'.toByte && c.toByte <= 'е'.toByte) (c.toByte - 'а'.toByte- 32).byteValue()
+        else if (c.toByte >= 'А'.toByte && c.toByte <= 'Е'.toByte) (c.toByte - 'А'.toByte- 64).byteValue()
+        else if (c.toByte >= 'ж'.toByte && c.toByte <= 'я'.toByte) (c.toByte - 'ж'.toByte- 26).byteValue()
+        else if (c.toByte >= 'Ж'.toByte && c.toByte <= 'Я'.toByte) (c.toByte - 'Ж'.toByte- 58).byteValue()
+        else {c.toByte}
+      }
       else out(i) = 0
     }
     out
   }
 
-  def shortToByteArray = (value: Int) =>
+  def shortToByteArray: Int => Array[Byte] = (value: Int) =>
     ByteBuffer
       .allocate(2)
       .putShort {
@@ -27,7 +36,7 @@ trait DataFunc {
           .array()
           .reverse
 
-  def intToByteArray = (value: Long) =>
+  def intToByteArray: Long => Array[Byte] = (value: Long) =>
     ByteBuffer
       .allocate(4)
       .putInt{
@@ -37,7 +46,7 @@ trait DataFunc {
       .array()
       .reverse
 
-  def byteToByteArray = (value: Short) =>
+  def byteToByteArray: Short => Array[Byte] = (value: Short) =>
     ByteBuffer
       .allocate(1)
       .put{
@@ -71,13 +80,13 @@ trait DataFunc {
     byteArr(hi).map(x => x.toChar).mkString
   }
 
-  def readUtfString = (hi: Array[Byte]) => {
+  def readUtfString: Array[Byte] => String = (hi: Array[Byte]) => {
     byteArr(hi).map(x =>
     if (x >= 0) x.toChar
     else seq(x)).mkString
   }
 
-  def byteArr(hi: Array[Byte]) = {
+  def byteArr(hi: Array[Byte]): Array[Byte] = {
     val out = new ArrayBuffer[Byte]()
     hi.foreach(x =>
     if (x != 0) out += x)
@@ -87,7 +96,7 @@ trait DataFunc {
   def seq: Map[Int, Char] = Map(-1 -> 'я',-33 -> 'Я',
       -2 -> 'ю',-34 -> 'Ю',
       -3 -> 'э',-35 -> 'Э',
-      -4 -> 'Ь',-36 -> 'Ь',
+      -4 -> 'ь',-36 -> 'Ь',
       -5 -> 'ы',-37 -> 'Ы',
       -6 -> 'ъ',-38 -> 'Ъ',
       -7 -> 'щ',-39 -> 'Щ',

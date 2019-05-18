@@ -25,4 +25,12 @@ trait CharacterAnswer {
 
 object CharacterAnswer{
   case class JobId(jobId: Short, fraction: Short)
+  case class CharStats(charId:Long, baseExp: Long, money: Long,
+                       jobExp: Long, jobLvl: Int, hp: Int,
+                       maxHp: Int,sp: Int, maxSp: Int,
+                       jobId: Int, local3Sex: Int, baseLvl: Int,
+                       hairColor: Int, clothesColor: Int, name: String,
+                       str: Short, agi: Short, vit: Short,
+                       int: Short, dex: Short, luk: Short,
+                       slot: Int, renames: Int)
 }

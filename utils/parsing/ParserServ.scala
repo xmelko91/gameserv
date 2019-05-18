@@ -9,7 +9,7 @@ import app.PocketLogic.CheckBase
 trait ParserServ extends DataFunc with CheckBase{
 
 
-  def parsePocket100(data: ByteString) = {
+  def parsePocket100(data: ByteString): ParsedData100 = {
     val arr = new ByteArrayInputStream(data.toArray)
     val pocketNumb = readUShort(arr.readNBytes(2))
     val l2 = readUShort(arr.readNBytes(2))
@@ -21,7 +21,7 @@ trait ParserServ extends DataFunc with CheckBase{
     ParsedData100(pocketNumb, l2, EMAIL, PASSWORD, BYTES)
   }
 
-  def parsePocket101(data: ByteString) = {
+  def parsePocket101(data: ByteString): ParsedData101 = {
     val arr = new ByteArrayInputStream(data.toArray)
     val pocketNumb = readUShort(arr.readNBytes(2))
     val loginAccountId = readUInteger(arr.readNBytes(4))
@@ -33,7 +33,7 @@ trait ParserServ extends DataFunc with CheckBase{
     ParsedData101(loginAccountId,loginId1,loginId2,0,sexOld)
   }
 
-  def parsePocket102(data: ByteString) = {
+  def parsePocket102(data: ByteString): ParsedData102 = {
     val arr = new ByteArrayInputStream(data.toArray)
     val pocketNumb = readUShort(arr.readNBytes(2))
     val SLOTID = readUByte(arr.readNBytes(1)(0))
@@ -41,7 +41,7 @@ trait ParserServ extends DataFunc with CheckBase{
     ParsedData102(SLOTID)
   }
 
-  def parsePocket103(data: ByteString) = {
+  def parsePocket103(data: ByteString): ParsedData103 = {
     val arr = new ByteArrayInputStream(data.toArray)
     val pocketNumb = readUShort(arr.readNBytes(2))
     val NICKNAME = readUtfString(arr.readNBytes(24))
@@ -59,7 +59,7 @@ trait ParserServ extends DataFunc with CheckBase{
     ParsedData103(NICKNAME, STR, AGI, VIT, INT, DEX, LUK, SLOTID, JOBID, ISMALE, summ)
   }
 
-  def parsePocket653(data: ByteString) = {
+  def parsePocket653(data: ByteString): ParsedData653 = {
     val arr = new ByteArrayInputStream(data.toArray)
     val pocketNumb = readUShort(arr.readNBytes(2))
     val LoginAccountId = readUInteger(arr.readNBytes(4))
@@ -69,7 +69,7 @@ trait ParserServ extends DataFunc with CheckBase{
     ParsedData653(LoginAccountId, CharacterID, NICKNAME)
   }
 
-  def parsePocket655(data: ByteString) = {
+  def parsePocket655(data: ByteString): ParsedData655 = {
     val arr = new ByteArrayInputStream(data.toArray)
     val pocketNumb = readUShort(arr.readNBytes(2))
     val CharacterID = readUInteger(arr.readNBytes(4))
@@ -80,7 +80,7 @@ trait ParserServ extends DataFunc with CheckBase{
 
 
   //читает первый Шорт
-  def pocketNumber(data:ByteString) = {
+  def pocketNumber(data:ByteString): Int = {
     val buf = new ByteArrayInputStream(data.toArray)
     val out = readUShort(buf.readNBytes(2))
     buf.close()
