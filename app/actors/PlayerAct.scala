@@ -5,7 +5,6 @@ import akka.io.Tcp.{PeerClosed, Received, Write}
 import akka.util.{ByteString, Timeout}
 import app.Settings
 import app.Settings.ActorPath
-import akka.pattern.ask
 import utils.answers.LoginAnswer
 import utils.parsing.ParserServ
 import scala.concurrent.duration.Duration
@@ -13,6 +12,7 @@ import scala.concurrent.duration.Duration
 class PlayerAct extends Actor
   with ParserServ
   with LoginAnswer{
+  
 
   import LoginActor._
   implicit val timeout: Timeout = new Timeout(Duration.create(5, "seconds"))

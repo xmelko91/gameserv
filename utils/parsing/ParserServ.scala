@@ -27,8 +27,10 @@ trait ParserServ extends DataFunc with CheckBase{
     val loginAccountId = readUInteger(arr.readNBytes(4))
     val loginId1 = readUInteger(arr.readNBytes(4))
     val loginId2 = readUInteger(arr.readNBytes(4))
+    readUShort(arr.readNBytes(2))
+    val sexOld = readUByte(arr.readNBytes(1)(0))
     arr.close()
-    ParsedData101(loginAccountId,loginId1,loginId2,0,0)
+    ParsedData101(loginAccountId,loginId1,loginId2,0,sexOld)
   }
 
   def parsePocket102(data: ByteString) = {
@@ -40,11 +42,9 @@ trait ParserServ extends DataFunc with CheckBase{
   }
 
   def parsePocket103(data: ByteString) = {
-    println("dataaa i " + data.toString())
     val arr = new ByteArrayInputStream(data.toArray)
     val pocketNumb = readUShort(arr.readNBytes(2))
     val NICKNAME = readUtfString(arr.readNBytes(24))
-    println(NICKNAME)
     val STR = readUByte(arr.readNBytes(1)(0))
     val AGI = readUByte(arr.readNBytes(1)(0))
     val VIT = readUByte(arr.readNBytes(1)(0))
@@ -59,6 +59,25 @@ trait ParserServ extends DataFunc with CheckBase{
     ParsedData103(NICKNAME, STR, AGI, VIT, INT, DEX, LUK, SLOTID, JOBID, ISMALE, summ)
   }
 
+  def parsePocket653(data: ByteString) = {
+    val arr = new ByteArrayInputStream(data.toArray)
+    val pocketNumb = readUShort(arr.readNBytes(2))
+    val LoginAccountId = readUInteger(arr.readNBytes(4))
+    val CharacterID = readUInteger(arr.readNBytes(4))
+    val NICKNAME = readUtfString(arr.readNBytes(24))
+    arr.close()
+    ParsedData653(LoginAccountId, CharacterID, NICKNAME)
+  }
+
+  def parsePocket655(data: ByteString) = {
+    val arr = new ByteArrayInputStream(data.toArray)
+    val pocketNumb = readUShort(arr.readNBytes(2))
+    val CharacterID = readUInteger(arr.readNBytes(4))
+    arr.close()
+    ParsedData655(CharacterID)
+  }
+
+
 
   //читает первый Шорт
   def pocketNumber(data:ByteString) = {
@@ -72,4 +91,6 @@ trait ParserServ extends DataFunc with CheckBase{
   case class ParsedData101(loginAccountId: Long, loginId1: Long, loginId2: Long, short: Int, sexOld: Short)
   case class ParsedData102(_slotid:Short)
   case class ParsedData103(_nickname:String, _str:Short, _agi:Short, _vit:Short, _int:Short, _dex:Short, _luk:Short, _slotid:Short, _jobid:Int, _ismale:Int, summ: Short)
+  case class ParsedData653(LoginAccountId: Long, ChacharacterID: Long, NICKNAME: String)
+  case class ParsedData655(ChacharacterID: Long)
 }

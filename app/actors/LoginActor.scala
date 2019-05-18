@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
 import akka.pattern.ask
 import app.PocketLogic.CheckBase
 import app.actors.LoginActor.UserInfo
-import utils.answers.LoginAnswer
+import utils.answers.{CharacterAnswer, LoginAnswer}
 import utils.parsing.ParserServ
 
 import scala.collection.mutable.ArrayBuffer
@@ -22,6 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 class LoginActor extends Actor
   with ParserServ
   with LoginAnswer
+  with CharacterAnswer
   with CheckBase {
 
   private implicit val newUserData: ArrayBuffer[UserInfo] = new ArrayBuffer[UserInfo]()
@@ -76,14 +77,12 @@ class LoginActor extends Actor
           ref ! Write(pocket110Answer(253).data)
         }
         else {
-          print("nick is ")
-          parsedData._nickname.getBytes().foreach(print)
-          println()
           val future = SqlSend ? SearchProps(parsedData._nickname,"name", "char_account")
           val result = Await.result(future, timeout.duration).asInstanceOf[String]
-          if (!result.equals("")) {
-            println("ib base!")
-            ref ! Write(pocket110Answer(250).data)
+          println(result + " --- 1" + parsedData._nickname)
+          if (result.equals(parsedData._nickname)) {
+            println("ib base!" + result)
+            ref ! Write(pocket110Answer(0).data)
           }
           else {
             ref ! Write(pocket110Answer(3).data)
@@ -91,8 +90,10 @@ class LoginActor extends Actor
         }
       }
       else if (parsedData.summ == 30){
-        val isMale = parsedData._ismale == -1
-        newUserData.foreach(println)
+        val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF) // пол персонажа
+        val job = getJobFract(parsedData._jobid) // фракция и класс
+
+        println(parsedData._jobid + "   " + job)
 
         val userInfo: UserInfo = getFromUserData(ref)
         implicit val info: UserInfo = UserInfo(userInfo.login.replace("|",""), userInfo.password, userInfo.ref)
@@ -106,21 +107,21 @@ class LoginActor extends Actor
           isInfoInMemory(userInfo)
           //создаётся новый чар в базе
           println("Adding new character")
-          val characterInfo = CharacterInfo(parsedData._nickname, parsedData._jobid, 0, 1,1)
+
+          val characterInfo = CharacterInfo(parsedData._nickname, job.jobId, isMale.shortValue(), job.fraction, 0)
 
           val future = SqlSend ? AddNewCharacter(info, characterInfo)
-          val result = Await.result(future, timeout.duration).asInstanceOf[Long]
+          val result = Await.result(future, timeout.duration).asInstanceOf[(Long, Long)]
+          val charID = result._1
 
-          if (result == -1) Write(pocket110Answer(250).data) // ошибка бд
+          if (charID == -1) Write(pocket110Answer(250).data) // ошибка бд
           else {
-            //всё ОК - шлём 105й
-            val playerLoginStats =  PlayerLoginStats(result, result, result, 2, 0, 0, Date.valueOf(LocalDate.now()))
-            val out = pocket105Answer(
-              Size = 79, playerLoginStats, 22243, "darkness01", 20, 66, 55, 44)
+            //всё ОК - шлём 109й
+
+            val out = pocket109NewChar(charID, job.jobId, isMale, 0, job.fraction, parsedData._nickname)
             ref ! Write(out.data)
           }
         }
-        println(result.toString + " male iss " + isMale)
       }
 
 

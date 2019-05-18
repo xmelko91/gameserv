@@ -2,44 +2,49 @@ package utils.sqlutils
 
 import java.sql
 import java.sql.{Date, DriverManager}
+import java.util.Properties
 
 import akka.actor.Actor
 import app.actors.LoginActor.{CharacterInfo, CheckUserInDB, UserInfo}
+import utils.parsing.DataFunc
 
-import scala.util.control.Breaks
 
-class SQLActor extends Actor {
+class SQLActor extends Actor with DataFunc{
 
   import SQLActor._
   import app.Settings._
 
   val url: String = "jdbc:mysql://localhost/" + dbName
-  val driver = "com.mysql.jdbc.Driver"
+  val driver = "com.mysql.cj.jdbc.Driver"
   val username: String = nmSQL
   val password: String = pswSQL
   var connection: sql.Connection = _
 
   def connect(): Unit = {
     Class.forName(driver)
-    connection = DriverManager.getConnection(url, username, password)
+    val p = new Properties()
+    p.setProperty("useSSL", "false")
+    p.setProperty("serverTimezone", "UTC")
+    p.setProperty("user", username)
+    p.setProperty("password",password)
+    p.setProperty("useUnicode","true")
+    p.setProperty("characterEncoding","cp1251")
+    connection = DriverManager.getConnection(url, p)
   }
 
   override def receive: Receive = {
+
+
     case SearchProps(stat, column, table) =>
-      println("searching " + stat)
       if (connection == null || connection.isClosed) connect()
       try {
-        var i = 1
-        val statement = connection.prepareStatement("SELECT * FROM " + table + " WHERE " + column + " = " + stat + ";")
-        statement.setString(i, table)
-        i = i + 1
-        statement.setString(i, column)
-        i = i + 1
-        statement.setString(i, stat)
-        val rs = statement.executeQuery()
+        val statement = connection.createStatement()
+        val n = "SELECT * FROM " + dbName + "." + table + " WHERE " + column + " = '"+ stat +"';"
+        val rs = statement.executeQuery(n)
+        rs.first()
         var id = ""
-        rs.next()
         id = rs.getString(column)
+        println(id + " sended")
         sender() ! id
       } catch {
         case e => sender() ! ""
@@ -66,13 +71,24 @@ class SQLActor extends Actor {
           val statementUpdate = connection.prepareStatement("INSERT INTO `" + dbName +
             "`.`char_account` (`loginAccountId`, `jobId`, `_local_3`, `clothesColor`, `hairColor`, `name`, `slot`) VALUES ('"+
             ID + "', '"+cInfo.jobId + "', '" + cInfo.local3 + "', '"+ cInfo.clothesColor +"', '"+ cInfo.hairColor +"', '"+ cInfo.name +"', '"+ cInfo.slot +"');")
-          val ret = statementUpdate.executeUpdate()
-          println("Adding is : " + ret)
-          sender() ! ID
+          statementUpdate.executeUpdate()
+          statementUpdate.close()
+
+          val statement = connection.createStatement()
+          val n = "SELECT * FROM " + dbName + ".char_account WHERE `name` = '"+ cInfo.name +"';"
+          val rs = statement.executeQuery(n)
+          rs.first()
+          var charId:Long = -1
+          charId = rs.getInt("characterId")
+          println("Adding is : " + charId)
+          sender() ! (charId, ID)
         }
-        else sender() ! -1
+        else sender() ! (-1, -1)
       } catch {
-        case e => sender() ! -1
+        case e => {
+          e.printStackTrace()
+          sender() ! (-1, -1)
+        }
       }
 
     case AddNewPlayer(info) => {

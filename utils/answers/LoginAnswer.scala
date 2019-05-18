@@ -11,21 +11,21 @@ trait LoginAnswer extends DataFunc {
   import app.Settings._
 
 
-  var adress1:Byte = TCP_IP._1
-  var adress2:Byte = TCP_IP._2
-  var adress3:Byte = TCP_IP._3
-  var adress4:Byte = TCP_IP._4
+  var adress1: Byte = TCP_IP._1
+  var adress2: Byte = TCP_IP._2
+  var adress3: Byte = TCP_IP._3
+  var adress4: Byte = TCP_IP._4
   var port: Short = TCP_IP._5
 
 
-  def pocket105Answer(Size:Int, Stats: PlayerLoginStats,
+  def pocket105Answer(Size: Int, Stats: PlayerLoginStats,
                       HbmVersion: Long,
                       name: String,
                       nameBuf: Long,
                       users: Int,
                       maintenance: Int,
                       New: Int
-                  ):LoginAnswerOut = {
+                     ): LoginAnswerOut = {
 
 
     val arr = shortToByteArray(105) ++
@@ -52,7 +52,7 @@ trait LoginAnswer extends DataFunc {
     LoginAnswerOut(ByteString(arr))
   }
 
-  def pocket106Answer(Errors:Short,
+  def pocket106Answer(Errors: Short,
                       Message_Errors: String
                      ): LoginAnswerOut = {
     val arr = shortToByteArray(106) ++
@@ -60,48 +60,57 @@ trait LoginAnswer extends DataFunc {
       stringToByteArray(Message_Errors, 20)
     LoginAnswerOut(ByteString(arr))
   }
-/*
-  def pocket107Answer(): LoginAnswerOut = {
-    val arr = shortToByteArray(107)++
-      shortToByteArray(20)++
-      stringToByteArray("", 20)++
-      intToByteArray(characterId)++
-      intToByteArray(baseExp)++
-      intToByteArray(money)++
-      intToByteArray(jobExp)++
-      shortToByteArray(jobLevel)++
-      stringToByteArray("", 24)++
-      shortToByteArray(hp)++
-      shortToByteArray(maxHp)++
-      shortToByteArray(sp)++
-      shortToByteArray(maxSp)++
-      stringToByteArray("", 2)++
-      shortToByteArray(jobId)++
-      shortToByteArray(local3)++
-      stringToByteArray("", 2)++
-      shortToByteArray(baseLvl)++
-      stringToByteArray("", 2)++
-      shortToByteArray(0)++
-      stringToByteArray("", 2)++
-      shortToByteArray(0)++
-      shortToByteArray(0)++
-      shortToByteArray(hairColor)++
-      shortToByteArray(clothesColor)++
-      stringToByteArray(name, 24)++
-      byteToByteArray(strrr)++
-      byteToByteArray(agiii)++
-      byteToByteArray(vittt)++
-      byteToByteArray(inttt)++
-      byteToByteArray(dexxx)++
-      byteToByteArray(lukkk)++
-      shortToByteArray(slot)++
-      shortToByteArray(renames)
-    LoginAnswerOut(ByteString(arr))
+
+  /*
+    def pocket107Answer(): LoginAnswerOut = {
+      val arr = shortToByteArray(107)++
+        shortToByteArray(20)++
+        stringToByteArray("", 20)++
+        intToByteArray(characterId)++
+        intToByteArray(baseExp)++
+        intToByteArray(money)++
+        intToByteArray(jobExp)++
+        shortToByteArray(jobLevel)++
+        stringToByteArray("", 24)++
+        shortToByteArray(hp)++
+        shortToByteArray(maxHp)++
+        shortToByteArray(sp)++
+        shortToByteArray(maxSp)++
+        stringToByteArray("", 2)++
+        shortToByteArray(jobId)++
+        shortToByteArray(local3)++
+        stringToByteArray("", 2)++
+        shortToByteArray(baseLvl)++
+        stringToByteArray("", 2)++
+        shortToByteArray(0)++
+        stringToByteArray("", 2)++
+        shortToByteArray(0)++
+        shortToByteArray(0)++
+        shortToByteArray(hairColor)++
+        shortToByteArray(clothesColor)++
+        stringToByteArray(name, 24)++
+        byteToByteArray(strrr)++
+        byteToByteArray(agiii)++
+        byteToByteArray(vittt)++
+        byteToByteArray(inttt)++
+        byteToByteArray(dexxx)++
+        byteToByteArray(lukkk)++
+        shortToByteArray(slot)++
+        shortToByteArray(renames)
+      LoginAnswerOut(ByteString(arr))
 
 
-  }*/
+    }*/
 
-  def pocket109Answer(CharacterId:Long,
+  def pocket109NewChar(characterId: Long,
+                       jobId: Int,
+                       local3: Int,
+                       hairColor: Int,
+                       clothesColor: Int,
+                       NickName: String): LoginAnswerOut =
+    pocket109Answer(characterId, 5, 50000, 5, 1, 42, 42, 10, 13, jobId, local3, 1, hairColor, clothesColor, NickName, 5, 5, 5, 5, 5, 5, 2, 1)
+
+  def pocket109Answer(CharacterId: Long,
                       BaseExp: Long,
                       Money: Long,
                       JobExp: Long,
@@ -130,13 +139,21 @@ trait LoginAnswer extends DataFunc {
       intToByteArray(Money) ++
       intToByteArray(JobExp) ++
       shortToByteArray(JobLevel) ++
+      stringToByteArray("", 24) ++
       shortToByteArray(hp) ++
       shortToByteArray(maxHp) ++
       shortToByteArray(sp) ++
       shortToByteArray(maxSp) ++
+      stringToByteArray("", 2) ++
       shortToByteArray(JobId) ++
       shortToByteArray(_local_3) ++
+      stringToByteArray("", 2) ++
       shortToByteArray(baseLevel) ++
+      stringToByteArray("", 2) ++
+      intToByteArray(0) ++
+      stringToByteArray("", 2) ++
+      intToByteArray(0) ++
+      intToByteArray(0) ++
       shortToByteArray(hairColor) ++
       shortToByteArray(clothesColor) ++
       stringToByteArray(NickName, 24) ++
@@ -151,7 +168,7 @@ trait LoginAnswer extends DataFunc {
     LoginAnswerOut(ByteString(arr))
   }
 
-  def pocket110Answer(Errors:Short): LoginAnswerOut = {
+  def pocket110Answer(Errors: Short): LoginAnswerOut = {
     val arr = shortToByteArray(110) ++
       byteToByteArray(Errors)
     LoginAnswerOut(ByteString(arr))
@@ -170,10 +187,22 @@ trait LoginAnswer extends DataFunc {
     LoginAnswerOut(ByteString(arr))
   }
 
-  def pocket115Answer(int : Long, short: Int) = {
-    val  arr = shortToByteArray(115) ++
+  def pocket115Answer(int: Long, short: Int) = {
+    val arr = shortToByteArray(115) ++
       intToByteArray(int) ++
       shortToByteArray(short)
+    LoginAnswerOut(ByteString(arr))
+  }
+
+  def pocket654Answer(errors: Int) = {
+    val arr = shortToByteArray(654) ++
+      shortToByteArray(errors)
+    LoginAnswerOut(ByteString(arr))
+  }
+
+  def pocket656Answer(errors: Int) = {
+    val arr = shortToByteArray(656) ++
+      shortToByteArray(errors)
     LoginAnswerOut(ByteString(arr))
   }
 

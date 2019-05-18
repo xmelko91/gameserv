@@ -10,6 +10,7 @@ import scala.io.Source
 import scala.util.control.Breaks
 
 object main extends App{
+  println("Hi111111")
   import Settings._
 
   implicit val actorSystem: ActorSystem                   = ActorSystem("ActorSystem")

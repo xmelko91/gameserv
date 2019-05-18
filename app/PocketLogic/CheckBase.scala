@@ -55,3 +55,4 @@ object RegexUtils {
     def matches(s: String) = underlying.pattern.matcher(s).matches
   }
 }
+
