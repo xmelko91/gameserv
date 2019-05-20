@@ -168,6 +168,36 @@ class LoginActor extends Actor
       ref ! Write(pocket113Answer(slotId, "city00").data)
     }
 
+    case ChangeNick(stage, data, ref) => {
+      var nick = ""
+      var charId:Long = 0
+      if (stage == 1) {
+        val parsedData = parsePocket653(data)
+        nick = parsedData.NICKNAME
+        charId = parsedData.ChacharacterID
+        println(parsedData)
+
+        val future = SqlSend ? SearchProps(parsedData.NICKNAME, "name", "char_account")
+        val result = Await.result(future, timeout.duration).asInstanceOf[String]
+
+        if (!result.equals("")) {
+          ref ! Write(pocket654Answer(0).data)
+        } else {
+          ref ! Write(pocket654Answer(1).data)
+        }
+      }
+      else if (stage == 2){
+        val parsedData = parsePocket655(data).ChacharacterID
+
+        if (!checkUserNickname(nick)){
+          ref ! Write(pocket656Answer(2).data)
+        }else{
+          //тут добавление в бд допилисть
+          ref ! Write(pocket656Answer(0).data)
+        }
+      }
+    }
+
     case a@_ => println(a + " " + context.system.name)
   }
 
@@ -178,6 +208,8 @@ class LoginActor extends Actor
 }
 
 object LoginActor {
+
+  case class ChangeNick(stage: Int, data: ByteString, actorRef: ActorRef)
 
   case class Slot(slot: ByteString, ref: ActorRef)
 

@@ -45,6 +45,14 @@ class PlayerAct extends Actor
         println("103 here")
         LoginSend ! NewUserInfo(data, sender())
 
+      case 32652 =>
+        println("32652 here")
+        LoginSend ! ChangeNick(1, data, sender())
+
+      case 32654 =>
+        println("32654 here")
+        LoginSend ! ChangeNick(2, data, sender())
+
       case _ => println("Необработаный пакет № " + pocketNumber(data))
     }
 
