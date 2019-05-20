@@ -25,6 +25,7 @@ trait ParserServ extends DataFunc with CheckBase{
     val arr = new ByteArrayInputStream(data.toArray)
     val pocketNumb = readUShort(arr.readNBytes(2))
     val loginAccountId = readUInteger(arr.readNBytes(4))
+    println("loasdasdasdsasd")
     val loginId1 = readUInteger(arr.readNBytes(4))
     val loginId2 = readUInteger(arr.readNBytes(4))
     readUShort(arr.readNBytes(2))

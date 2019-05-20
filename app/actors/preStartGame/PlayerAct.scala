@@ -1,12 +1,13 @@
-package app.actors
+package app.actors.preStartGame
 
-import akka.actor.{Actor, ActorRef, ActorSelection, PoisonPill}
+import akka.actor.{Actor, ActorSelection, PoisonPill}
 import akka.io.Tcp.{PeerClosed, Received, Write}
 import akka.util.{ByteString, Timeout}
 import app.Settings
 import app.Settings.ActorPath
 import utils.answers.LoginAnswer
 import utils.parsing.ParserServ
+
 import scala.concurrent.duration.Duration
 
 class PlayerAct extends Actor
@@ -38,6 +39,7 @@ class PlayerAct extends Actor
         println("101 is here")
         LoginSend ! UserBaseInfo(data, sender())
       case 102 =>
+        println("102 here")
         LoginSend ! Slot(data, sender())
       case 103 =>
         println("103 here")

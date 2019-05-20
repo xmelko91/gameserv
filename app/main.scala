@@ -2,7 +2,9 @@ package app
 
 import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import app.actors.{LoginActor, WebServer}
+import app.actors.preStartGame.{LoginActor, WebServer}
+import app.actors.preStartGame.WebServer
+import app.actors.inGame.MapActor
 import utils.sqlutils.SQLActor
 
 import scala.concurrent.ExecutionContextExecutor
@@ -32,6 +34,16 @@ object main extends App{
         val port = Integer.valueOf(arr(4)).shortValue()
         TCP_IP = (a1, a2, a3, a4, port)
       }
+      if (adress(0).equals("MAP_IP")) {
+        val addr = adress(1)
+        val arr = addr.split("\\.")
+        val a1 = Integer.valueOf(arr(0)).byteValue()
+        val a2 = Integer.valueOf(arr(1)).byteValue()
+        val a3 = Integer.valueOf(arr(2)).byteValue()
+        val a4 = Integer.valueOf(arr(3)).byteValue()
+        val port = Integer.valueOf(arr(4)).shortValue()
+        MAP_IP = (a1, a2, a3, a4, port)
+      }
       if (adress(0).equals("jdbc")){
         dbName = adress(1)
         nmSQL = adress(2)
@@ -42,9 +54,10 @@ object main extends App{
     case  e => e.printStackTrace()
   }
 
-  val tcpServ = actorSystem.actorOf(Props(classOf[WebServer], hostPath, TCP_IP._5.intValue()))
+  val tcpServ    = actorSystem.actorOf(Props(classOf[WebServer]), name = "Tcp")
   val loginActor = actorSystem.actorOf(Props(classOf[LoginActor]), name = "Login")
-  val sqlActor = actorSystem.actorOf(Props(classOf[SQLActor]), name = "SQL")
+  val sqlActor   = actorSystem.actorOf(Props(classOf[SQLActor]), name = "SQL")
+  val mapActor   = actorSystem.actorOf(Props(classOf[MapActor]), name = "Map")
   println(loginActor.path)
 
 }
@@ -56,11 +69,13 @@ object Settings{
   var dbName:String = _
 
   var TCP_IP:(Byte,Byte,Byte,Byte,Short) = _
+  var MAP_IP:(Byte,Byte,Byte,Byte,Short) = _
   lazy val hostPath: String = TCP_IP._1 + "." + TCP_IP._2 + "." + TCP_IP._3 + "." + TCP_IP._4
+  lazy val mapHostPath: String = MAP_IP._1 + "." + MAP_IP._2 + "." + MAP_IP._3 + "." + MAP_IP._4
   def ActorPath(path:String) : String = "akka://ActorSystem/user/"+path
   private var xml = "<?xml version=\"1.0\"?>\n<!DOCTYPE cross-domain-policy SYSTEM \n\"http://www.adobe.com/xml/dtds/cross-domain-policy.dtd\">\n<cross-domain-policy>\n"
   xml += "<site-control permitted-cross-domain-policies=\"master-only\"/>\n"
   xml += "<allow-access-from domain=\"*\" to-ports=\"*\"/>\n"
   xml += "</cross-domain-policy>\n"
-  val POLICY = xml
+  val POLICY: String = xml
 }

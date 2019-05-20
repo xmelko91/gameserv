@@ -1,15 +1,16 @@
-package app.actors
+package app.actors.preStartGame
 
 import java.net.InetSocketAddress
 
 import akka.actor.{Actor, Props}
 import akka.io.{IO, Tcp}
 
-class WebServer(address: String, port: Int) extends Actor{
+class WebServer() extends Actor{
   import Tcp._
+  import app.Settings.{TCP_IP, hostPath}
   import context.system
 
-  IO(Tcp) ! Bind(self, new InetSocketAddress(address, port))
+  IO(Tcp) ! Bind(self, new InetSocketAddress(hostPath, TCP_IP._5))
 
 
   def receive: PartialFunction[Any, Unit] = {

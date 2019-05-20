@@ -5,7 +5,7 @@ import RegexUtils._
 import java.security.MessageDigest
 
 import akka.actor.ActorRef
-import app.actors.LoginActor.{NewUserId, UserInfo}
+import app.actors.preStartGame.LoginActor.{NewUserId, UserInfo}
 
 import scala.collection.mutable.ArrayBuffer
 

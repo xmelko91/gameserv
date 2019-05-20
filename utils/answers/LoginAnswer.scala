@@ -1,7 +1,7 @@
 package utils.answers
 
 import akka.util.ByteString
-import app.actors.LoginActor.LoginAnswerOut
+import app.actors.preStartGame.LoginActor.LoginAnswerOut
 import utils.answers.CharacterAnswer.CharStats
 import utils.parsing.DataFunc
 import utils.sqlutils.SQLActor.PlayerLoginStats
@@ -51,7 +51,6 @@ trait LoginAnswer extends DataFunc {
       shortToByteArray(users) ++
       shortToByteArray(maintenance) ++
       shortToByteArray(New)
-    println(arr.length)
     LoginAnswerOut(ByteString(arr))
   }
 
@@ -64,7 +63,7 @@ trait LoginAnswer extends DataFunc {
     LoginAnswerOut(ByteString(arr))
   }
 
-  def pocket107Answer(arrayChars: Array[CharStats], slot: Int): LoginAnswerOut = {
+  def pocket107Answer(arrayChars: Array[CharStats], slot: Int = -1): LoginAnswerOut = {
 
     var arr = shortToByteArray(107) ++
       shortToByteArray(20) ++
@@ -103,11 +102,9 @@ trait LoginAnswer extends DataFunc {
           byteToByteArray(p.luk) ++
           shortToByteArray(p.slot) ++
           shortToByteArray(p.renames))
-        println(p.name)
-        arr.zipWithIndex.foreach(z => println(z._2 + " index is " + z._1 ))
-        println(p.local3Sex)
       }
-    }else{
+    }
+    else{
       for (p <- arrayChars) {
         if (p.slot == slot) {
           arr = arr ++ (intToByteArray(p.charId) ++
@@ -225,11 +222,11 @@ trait LoginAnswer extends DataFunc {
     val arr = shortToByteArray(113) ++
       intToByteArray(CharacterId) ++
       stringToByteArray(MapName, 16) ++
-      byteToByteArray(TCP_IP._1) ++
-      byteToByteArray(TCP_IP._2) ++
-      byteToByteArray(TCP_IP._3) ++
-      byteToByteArray(TCP_IP._4) ++
-      shortToByteArray(TCP_IP._5)
+      byteToByteArray(MAP_IP._1) ++
+      byteToByteArray(MAP_IP._2) ++
+      byteToByteArray(MAP_IP._3) ++
+      byteToByteArray(MAP_IP._4) ++
+      shortToByteArray(MAP_IP._5)
     LoginAnswerOut(ByteString(arr))
   }
 

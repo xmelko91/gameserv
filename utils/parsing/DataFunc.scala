@@ -71,7 +71,7 @@ trait DataFunc {
 
   def readUInteger: Array[Byte] =>
     Long = (hi: Array[Byte]) => {
-    val in = ByteBuffer.wrap(hi.reverse).getLong()
+    val in = ByteBuffer.wrap(hi.reverse).getInt().longValue()
     if (in < 0) in + Int.MaxValue
     else in
   }

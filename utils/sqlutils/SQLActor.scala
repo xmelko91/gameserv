@@ -5,7 +5,7 @@ import java.sql.{Date, DriverManager}
 import java.util.Properties
 
 import akka.actor.Actor
-import app.actors.LoginActor.{CharacterInfo, CheckUserInDB, UserInfo}
+import app.actors.preStartGame.LoginActor.{CharacterInfo, CheckUserInDB, UserInfo}
 import utils.parsing.DataFunc
 
 import scala.collection.mutable.ArrayBuffer
@@ -55,21 +55,26 @@ class SQLActor extends Actor with DataFunc{
       }
     }
 
-    case AddNewCharacter(info, cInfo) => {
+    case AddNewCharacter(info, cInfo, logId) => {
       if (connection == null || connection.isClosed) connect()
       try {
         println("adding")
         var ID: Long = -1
-
         var i: Int = 1
-        val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`login_account` WHERE `login` = ? AND `pass` = ?;")
-        statement.setString(i, info.login)
-        i += 1
-        statement.setString(i, info.password)
-        val rs = statement.executeQuery()
-        rs.next()
-        ID = rs.getLong("loginAccountId")
-        println("ID got " + ID)
+
+
+        if (!info.login.equals("1")) {
+          val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`login_account` WHERE `login` = ? AND `pass` = ?;")
+          statement.setString(i, info.login)
+          i += 1
+          statement.setString(i, info.password)
+          val rs = statement.executeQuery()
+          rs.next()
+          ID = rs.getLong("loginAccountId")
+          println("ID got " + ID)
+        }else{
+          ID = logId
+        }
 
         if (ID != -1) {
           i = 1
@@ -88,11 +93,11 @@ class SQLActor extends Actor with DataFunc{
           println("Adding is : " + charId)
           sender() ! (charId, ID)
         }
-        else sender() ! (-1, -1)
+        else sender() ! (1.longValue(), 1.longValue())
       } catch {
         case e => {
           e.printStackTrace()
-          sender() ! (-1, -1)
+          sender() ! (-1.longValue(), -1.longValue())
         }
       }
     }
@@ -100,11 +105,15 @@ class SQLActor extends Actor with DataFunc{
     case AddNewPlayer(info) => {
       if (connection == null || connection.isClosed) connect()
       try {
+        if (!info.login.equals("1")) {
         println("adding character")
         var rs = -1
         val statement = connection.createStatement()
         rs = statement.executeUpdate("INSERT INTO `" + dbName + "`.`login_account` (`login`, `pass`) VALUES ('" + info.login + "', '" + info.password + "');")
-        sender() ! rs
+        sender() ! rs.longValue()
+      }else{
+          sender() ! 0
+        }
       } catch {
         case e => {
           e.printStackTrace()
@@ -150,51 +159,62 @@ class SQLActor extends Actor with DataFunc{
 
       if (connection == null || connection.isClosed) connect()
       try {
-        val out = new ArrayBuffer[CharStats]()
-        val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`char_account` WHERE loginAccountId = ?;")
+        if (slot < 0) {
+          val out = new ArrayBuffer[CharStats]()
+          val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`char_account` WHERE loginAccountId = ?;")
 
-        statement.setLong(1, loginId)
-        val rs = statement.executeQuery()
+          statement.setLong(1, loginId)
+          val rs = statement.executeQuery()
+          while (rs.next()) {
 
-        while (rs.next()){
+            val charId = rs.getLong("characterId")
+            val baseExp = rs.getLong("baseExp")
+            val money = rs.getLong("money")
+            val jobExp = rs.getLong("jobExp")
+            val jobLvl = rs.getInt("jobLevel")
+            val hp = rs.getInt("hp")
+            val maxHp = rs.getInt("maxHp")
+            val sp = rs.getShort("sp")
+            val maxSp = rs.getInt("maxSp")
+            val jobId = rs.getInt("jobId")
+            val local3 = rs.getInt("_local_3")
+            val baseLvl = rs.getInt("baseLevel")
+            val hairColor = rs.getInt("hairColor")
+            val clothesColor = rs.getInt("clothesColor")
+            val name = rs.getString("name")
+            val str = rs.getShort("strrr")
+            val agi = rs.getShort("agiii")
+            val vit = rs.getShort("vittt")
+            val int = rs.getShort("inttt")
+            val dex = rs.getShort("dexxx")
+            val luk = rs.getShort("lukkk")
+            val slot = rs.getInt("slot")
+            val renames = rs.getInt("renames")
 
-          val charId = rs.getLong("characterId")
-          val baseExp = rs.getLong("baseExp")
-          val money = rs.getLong("money")
-          val jobExp = rs.getLong("jobExp")
-          val jobLvl = rs.getInt("jobLevel")
-          val hp = rs.getInt("hp")
-          val maxHp = rs.getInt("maxHp")
-          val sp = rs.getShort("sp")
-          val maxSp = rs.getInt("maxSp")
-          val jobId = rs.getInt("jobId")
-          val local3 = rs.getInt("_local_3")
-          val baseLvl = rs.getInt("baseLevel")
-          val hairColor = rs.getInt("hairColor")
-          val clothesColor = rs.getInt("clothesColor")
-          val name = rs.getString("name")
-          val str = rs.getShort("strrr")
-          val agi = rs.getShort("agiii")
-          val vit = rs.getShort("vittt")
-          val int = rs.getShort("inttt")
-          val dex = rs.getShort("dexxx")
-          val luk = rs.getShort("lukkk")
-          val slot = rs.getInt("slot")
-          val renames = rs.getInt("renames")
+            val char = CharStats(
+              charId, baseExp, money, jobExp, jobLvl,
+              hp, maxHp, sp, maxSp, jobId, local3,
+              baseLvl, hairColor, clothesColor, name
+              , str, agi, vit, int, dex, luk
+              , slot, renames)
 
-          val char = CharStats(
-            charId,baseExp,money,jobExp,jobLvl,
-            hp,maxHp,sp,maxSp,jobId,local3,
-            baseLvl,hairColor,clothesColor,name
-            ,str,agi,vit,int,dex,luk
-            ,slot,renames)
+            out += char
+          }
 
-          out += char
+          sender() ! out.toArray
         }
-        out.foreach(println)
+        else {
+          val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`char_account` WHERE loginAccountId = ? AND slot = ?;")
 
-        sender() ! out.toArray
+          statement.setLong(1, loginId)
+          statement.setInt(2, slot)
+          val rs = statement.executeQuery()
+          if (rs.first()){
+            val charId = rs.getLong("characterId")
 
+            sender() ! charId
+          }
+        }
 
       }catch {
         case e => {
@@ -212,7 +232,7 @@ class SQLActor extends Actor with DataFunc{
 
 object SQLActor {
 
-  case class AddNewCharacter(info: UserInfo, cInfo: CharacterInfo)
+  case class AddNewCharacter(info: UserInfo, cInfo: CharacterInfo, logId: Long)
 
   case class AddNewPlayer(info: UserInfo)
 
@@ -220,7 +240,7 @@ object SQLActor {
 
   case class SearchProps(id: String, param: String, table: String)
 
-  case class AllChars(loginId: Long, slot: Int)
+  case class AllChars(loginId: Long, slot: Int = -1)
 
   case class InsertProps()
 
