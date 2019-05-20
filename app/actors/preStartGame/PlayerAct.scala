@@ -46,12 +46,12 @@ class PlayerAct extends Actor
         println("103 here")
         LoginSend ! NewUserInfo(data, sender())
 
-      case 32652 =>
+      case 653 =>
         println("32652 here" + parsePocket653(data).NICKNAME)
         nick = parsePocket653(data).NICKNAME
         LoginSend ! ChangeNick(1, data, sender())
 
-      case 32654 =>
+      case 655 =>
         println("32654 here" + nick)
         LoginSend ! ChangeNick(2, data, sender(), nick)
 

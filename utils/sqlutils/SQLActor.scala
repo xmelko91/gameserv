@@ -211,8 +211,37 @@ class SQLActor extends Actor with DataFunc {
           val rs = statement.executeQuery()
           if (rs.first()){
             val charId = rs.getLong("characterId")
+            val baseExp = rs.getLong("baseExp")
+            val money = rs.getLong("money")
+            val jobExp = rs.getLong("jobExp")
+            val jobLvl = rs.getInt("jobLevel")
+            val hp = rs.getInt("hp")
+            val maxHp = rs.getInt("maxHp")
+            val sp = rs.getShort("sp")
+            val maxSp = rs.getInt("maxSp")
+            val jobId = rs.getInt("jobId")
+            val local3 = rs.getInt("_local_3")
+            val baseLvl = rs.getInt("baseLevel")
+            val hairColor = rs.getInt("hairColor")
+            val clothesColor = rs.getInt("clothesColor")
+            val name = rs.getString("mapName")
+            val str = rs.getShort("strrr")
+            val agi = rs.getShort("agiii")
+            val vit = rs.getShort("vittt")
+            val int = rs.getShort("inttt")
+            val dex = rs.getShort("dexxx")
+            val luk = rs.getShort("lukkk")
+            val slot = rs.getInt("slot")
+            val renames = rs.getInt("renames")
 
-            sender() ! charId
+            val char = CharStats(
+              charId, baseExp, money, jobExp, jobLvl,
+              hp, maxHp, sp, maxSp, jobId, local3,
+              baseLvl, hairColor, clothesColor, name
+              , str, agi, vit, int, dex, luk
+              , slot, renames)
+
+            sender() ! char
           }
         }
 

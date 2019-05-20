@@ -41,6 +41,12 @@ trait CheckBase {
     null
   }
 
+  def getFromUserIdS(ref: ActorRef, charId: Long)(implicit arr: ArrayBuffer[NewUserId]):NewUserId = {
+    arr.foreach(value =>
+      if (value.userId == charId && ref.equals(value.ref)) return value)
+    null
+  }
+
   def checkUserInB(ref: ActorRef)(implicit arr: ArrayBuffer[NewUserId]):Boolean = {
     arr.foreach(value =>
       if (value.ref.equals(ref)) return true)

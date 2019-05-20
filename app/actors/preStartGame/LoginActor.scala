@@ -25,7 +25,7 @@ class LoginActor extends Actor
   with CheckBase {
 
   private implicit val newUserData: ArrayBuffer[UserInfo] = new ArrayBuffer[UserInfo]()
-  private implicit val UserId: ArrayBuffer[NewUserId] = new ArrayBuffer[NewUserId]()
+  private implicit var UserId: ArrayBuffer[NewUserId] = new ArrayBuffer[NewUserId]()
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
 
   import LoginActor._
@@ -34,7 +34,6 @@ class LoginActor extends Actor
     case LoginData(data, ref) => {
       //получает распарсенную дату, кортеж в виде всех полей
       val parsedData = parsePocket100(data)
-      println(parsedData._bytes)
       val info = UserInfo(parsedData.email, parsedData.password, ref)
 
       //проверяем и добавляем в буфер не зареганых юзеров
@@ -92,8 +91,6 @@ class LoginActor extends Actor
         val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF) // пол персонажа
         val job = getJobFract(parsedData._jobid) // фракция и класс
 
-        println(parsedData._jobid + "   " + job)
-
         val userInfo: UserInfo = getFromUserData(ref)
         implicit var info: UserInfo = null
 
@@ -107,9 +104,8 @@ class LoginActor extends Actor
 
         }else{
 
-          user = NewUserId(1,1,ref)
+          user = NewUserId(1,1,ref,0)
           info = UserInfo(userInfo.login.replace("|", ""), userInfo.password, userInfo.ref)
-          println("Adding new player")
           val future = SqlSend ? AddNewPlayer(info)
           result = Await.result(future, timeout.duration).asInstanceOf[Long]
         }
@@ -118,6 +114,7 @@ class LoginActor extends Actor
           //isInfoInMemory(userInfo)
           //создаётся новый чар в базе
           println("Adding new character")
+          UserId = UserId.filter(x => !x.ref.equals(ref))
 
           val characterInfo = CharacterInfo(parsedData._nickname, job.jobId, isMale.shortValue(), job.fraction, 1, parsedData._slotid)
 
@@ -126,12 +123,11 @@ class LoginActor extends Actor
           val loginID = result._2
           val charID = result._1
 
-          UserId += NewUserId(loginID, charID, ref)
+          UserId += NewUserId(loginID, charID, ref, 0)
 
           if (charID == -1) Write(pocket110Answer(250).data) // ошибка бд
           else {
             //всё ОК - шлём 109й
-
             val out = pocket109NewChar(charID, job.jobId, isMale, 0, job.fraction, parsedData._nickname)
             ref ! Write(out.data)
           }
@@ -147,7 +143,9 @@ class LoginActor extends Actor
       val result = Await.result(future, timeout.duration).asInstanceOf[Array[CharStats]]
 
       ref ! Write(ByteString(intToByteArray(loginId.loginAccountId)))
-      UserId += NewUserId(loginId.loginAccountId, -1, ref)
+      result.foreach(x =>
+        UserId += NewUserId(loginId.loginAccountId, x.charId, ref, x.slot)
+      )
       ref ! Write(pocket107Answer(result).data)
 
     }
@@ -155,21 +153,31 @@ class LoginActor extends Actor
     //println(parsedData.loginAccountId)
 
     case Slot(data, ref) => {
-      var slotId: Long = 0
+      var slotId: CharStats = null
 
+      var charId: Long = 0
+      var map = ""
+      val user = getFromUserId(ref).userId
       if (data.length > 2) {
         val slot = parsePocket102(data)._slotid
-        val user = getFromUserId(ref).userId
+
 
         val future = SqlSend ? AllChars(user, slot)
-        slotId = Await.result(future, timeout.duration).asInstanceOf[Long]
+        slotId = Await.result(future, timeout.duration).asInstanceOf[CharStats]
+
+        charId = slotId.charId
+        map = slotId.name
 
       }
       else {
+        charId = getFromUserId(ref).charId
         println(data.length)
-        slotId = getFromUserId(ref).charId
+        //charId = getFromUserIdS(ref, user).charId
+        map = "city00"
+        //Дефолтное значение мапы
+        println(slotId)
       }
-      ref ! Write(pocket113Answer(slotId, "city00").data)
+      ref ! Write(pocket113Answer(charId,map).data)
     }
 
     case ChangeNick(stage, data, ref, name) => {
@@ -233,7 +241,7 @@ object LoginActor {
 
   case class UserInfo(login: String, password: String, ref: ActorRef)
 
-  case class NewUserId(userId: Long, charId: Long, ref: ActorRef)
+  case class NewUserId(userId: Long, charId: Long, ref: ActorRef, slot: Int)
 
   case class UserBaseInfo(data: ByteString, actorRef: ActorRef)
 

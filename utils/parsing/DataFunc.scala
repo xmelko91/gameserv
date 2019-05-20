@@ -1,6 +1,7 @@
 package utils.parsing
 
 import java.nio.ByteBuffer
+import scala.native
 import java.nio.charset.StandardCharsets
 
 import scala.collection.mutable.ArrayBuffer
@@ -30,8 +31,7 @@ trait DataFunc {
     ByteBuffer
       .allocate(2)
       .putShort {
-        if (value > Short.MaxValue) (value - Short.MaxValue + Short.MinValue).shortValue()
-        else value.shortValue()
+        value.shortValue()
       }
           .array()
           .reverse
@@ -40,8 +40,7 @@ trait DataFunc {
     ByteBuffer
       .allocate(4)
       .putInt{
-        if (value > Int.MaxValue) (value - Int.MaxValue + Int.MinValue).intValue()
-        else value.intValue()
+        value.intValue()
       }
       .array()
       .reverse
@@ -50,30 +49,33 @@ trait DataFunc {
     ByteBuffer
       .allocate(1)
       .put{
-        if(value > Byte.MaxValue) (value - Byte.MaxValue + Byte.MinValue).byteValue()
-        else value.byteValue()
+        value.byteValue()
       }
       .array()
 
   def readUByte: Byte => Short =
     (hi: Byte) => {
       val sh = hi.shortValue()
-      if (sh < 0) (sh + Byte.MaxValue).shortValue()
+      if (sh < 0) (sh & 0xFF).shortValue()
       else sh
     }
 
   def readUShort: Array[Byte] => Int =
     (hi: Array[Byte]) => {
-      val sh = (hi(1) << 8 | hi(0)).intValue()
-      if (sh < 0) sh + Short.MaxValue
-      else sh
+      val firstByte = 0x000000FF & hi(1)
+      val secondByte = 0x000000FF & hi(0)
+
+      firstByte << 8 | secondByte
     }
 
   def readUInteger: Array[Byte] =>
     Long = (hi: Array[Byte]) => {
-    val in = ByteBuffer.wrap(hi.reverse).getInt().longValue()
-    if (in < 0) in + Int.MaxValue
-    else in
+    val firstByte = 0x000000FF & hi(3)
+    val secondByte = 0x000000FF & hi(2)
+    val thirdByte = 0x000000FF & hi(1)
+    val fourthByte = 0x000000FF & hi(0)
+
+    firstByte << 24 | secondByte << 16 | thirdByte << 8 | fourthByte
   }
 
   def readString: Array[Byte] => String = (hi: Array[Byte]) => {
