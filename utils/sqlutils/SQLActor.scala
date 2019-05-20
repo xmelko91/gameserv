@@ -11,7 +11,7 @@ import utils.parsing.DataFunc
 import scala.collection.mutable.ArrayBuffer
 
 
-class SQLActor extends Actor with DataFunc{
+class SQLActor extends Actor with DataFunc {
 
   import SQLActor._
   import app.Settings._
@@ -28,9 +28,9 @@ class SQLActor extends Actor with DataFunc{
     p.setProperty("useSSL", "false")
     p.setProperty("serverTimezone", "UTC")
     p.setProperty("user", username)
-    p.setProperty("password",password)
-    p.setProperty("useUnicode","true")
-    p.setProperty("characterEncoding","cp1251")
+    p.setProperty("password", password)
+    p.setProperty("useUnicode", "true")
+    p.setProperty("characterEncoding", "cp1251")
     connection = DriverManager.getConnection(url, p)
   }
 
@@ -106,12 +106,12 @@ class SQLActor extends Actor with DataFunc{
       if (connection == null || connection.isClosed) connect()
       try {
         if (!info.login.equals("1")) {
-        println("adding character")
-        var rs = -1
-        val statement = connection.createStatement()
-        rs = statement.executeUpdate("INSERT INTO `" + dbName + "`.`login_account` (`login`, `pass`) VALUES ('" + info.login + "', '" + info.password + "');")
-        sender() ! rs.longValue()
-      }else{
+          println("adding character")
+          var rs = -1
+          val statement = connection.createStatement()
+          rs = statement.executeUpdate("INSERT INTO `" + dbName + "`.`login_account` (`login`, `pass`) VALUES ('" + info.login + "', '" + info.password + "');")
+          sender() ! rs.longValue()
+        }else{
           sender() ! 0
         }
       } catch {
@@ -225,12 +225,28 @@ class SQLActor extends Actor with DataFunc{
 
     }
 
+    case ChangeNickName(id, nick) => {
+      try {
+        println("setting name " + nick)
+        val str = "UPDATE `serverDB`.`char_account` SET `name` = '"+ nick +"', `renames` = '1' WHERE (`characterId` = '"+ id.toString +"');"
+        val statement = connection.prepareStatement(str)
+        val rs = statement.executeUpdate()
+        sender() ! rs
+      }catch {
+        case e =>
+          e.printStackTrace()
+          sender() ! -1
+      }
+    }
+
   }
 
   override def postStop(): Unit = println("SQL Actor died.")
 }
 
 object SQLActor {
+
+  case class ChangeNickName(id: Long, name: String)
 
   case class AddNewCharacter(info: UserInfo, cInfo: CharacterInfo, logId: Long)
 

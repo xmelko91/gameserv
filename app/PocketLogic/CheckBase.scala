@@ -41,6 +41,12 @@ trait CheckBase {
     null
   }
 
+  def checkUserInB(ref: ActorRef)(implicit arr: ArrayBuffer[NewUserId]):Boolean = {
+    arr.foreach(value =>
+      if (value.ref.equals(ref)) return true)
+    false
+  }
+
   def md5(s: Array[Byte]): Array[Byte] = {
     MessageDigest.getInstance("MD5").digest(s)
   }

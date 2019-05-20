@@ -30,7 +30,6 @@ class LoginActor extends Actor
 
   import LoginActor._
 
-
   override def receive: Receive = {
     case LoginData(data, ref) => {
       //получает распарсенную дату, кортеж в виде всех полей
@@ -39,7 +38,7 @@ class LoginActor extends Actor
       val info = UserInfo(parsedData.email, parsedData.password, ref)
 
       //проверяем и добавляем в буфер не зареганых юзеров
-      isInfoInMemory(info)
+      //isInfoInMemory(info)
       if (info.login.endsWith("|")) newUserData += info
       //
 
@@ -90,7 +89,7 @@ class LoginActor extends Actor
         }
       }
       else if (parsedData.summ == 30) {
-        val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF)// пол персонажа
+        val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF) // пол персонажа
         val job = getJobFract(parsedData._jobid) // фракция и класс
 
         println(parsedData._jobid + "   " + job)
@@ -98,14 +97,19 @@ class LoginActor extends Actor
         val userInfo: UserInfo = getFromUserData(ref)
         implicit var info: UserInfo = null
 
-        var result:Long = 0
-        var user: NewUserId = null
+        var result: Long = 0
+        var user: NewUserId = getFromUserId(ref)
+        println("USER " + user)
         //проверяем логин в базе
-        if ((user = getFromUserId(ref)) != null) {
-           info = UserInfo("1","1",ref)
+        //создаётся новый логин в базе
+        if (userInfo == null) {
+          info = UserInfo("1","1",ref)
+
         }else{
-          //создаётся новый логин в базе
+
+          user = NewUserId(1,1,ref)
           info = UserInfo(userInfo.login.replace("|", ""), userInfo.password, userInfo.ref)
+          println("Adding new player")
           val future = SqlSend ? AddNewPlayer(info)
           result = Await.result(future, timeout.duration).asInstanceOf[Long]
         }
@@ -151,9 +155,9 @@ class LoginActor extends Actor
     //println(parsedData.loginAccountId)
 
     case Slot(data, ref) => {
-      var slotId:Long = 0
+      var slotId: Long = 0
 
-      if (data.length > 2){
+      if (data.length > 2) {
         val slot = parsePocket102(data)._slotid
         val user = getFromUserId(ref).userId
 
@@ -168,16 +172,17 @@ class LoginActor extends Actor
       ref ! Write(pocket113Answer(slotId, "city00").data)
     }
 
-    case ChangeNick(stage, data, ref) => {
+    case ChangeNick(stage, data, ref, name) => {
       var nick = ""
-      var charId:Long = 0
+      var charId: Long = 0
       if (stage == 1) {
+        println("1st stage")
         val parsedData = parsePocket653(data)
         nick = parsedData.NICKNAME
         charId = parsedData.ChacharacterID
         println(parsedData)
 
-        val future = SqlSend ? SearchProps(parsedData.NICKNAME, "name", "char_account")
+        val future = SqlSend ? SearchProps(nick, "name", "char_account")
         val result = Await.result(future, timeout.duration).asInstanceOf[String]
 
         if (!result.equals("")) {
@@ -186,20 +191,31 @@ class LoginActor extends Actor
           ref ! Write(pocket654Answer(1).data)
         }
       }
-      else if (stage == 2){
+      else if (stage == 2) {
+        nick = name
+        println("2nd stage ")
         val parsedData = parsePocket655(data).ChacharacterID
 
-        if (!checkUserNickname(nick)){
+
+
+        if (!checkUserNickname(nick)) {
+          println("wrong rename " + nick)
           ref ! Write(pocket656Answer(2).data)
-        }else{
+        } else {
           //тут добавление в бд допилисть
-          ref ! Write(pocket656Answer(0).data)
+
+          val future = SqlSend ? ChangeNickName(parsedData, nick)
+          val result = Await.result(future, timeout.duration).asInstanceOf[Int]
+
+          if (result == -1) ref ! Write(pocket656Answer(2).data)
+          else ref ! Write(pocket656Answer(0).data)
         }
       }
     }
 
     case a@_ => println(a + " " + context.system.name)
   }
+
 
   override def postStop(): Unit = println("LoginActor died.")
 
@@ -209,7 +225,7 @@ class LoginActor extends Actor
 
 object LoginActor {
 
-  case class ChangeNick(stage: Int, data: ByteString, actorRef: ActorRef)
+  case class ChangeNick(stage: Int, data: ByteString, actorRef: ActorRef, name: String = "")
 
   case class Slot(slot: ByteString, ref: ActorRef)
 

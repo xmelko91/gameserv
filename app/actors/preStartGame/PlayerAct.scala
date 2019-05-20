@@ -17,6 +17,7 @@ class PlayerAct extends Actor
 
   import LoginActor._
   implicit val timeout: Timeout = new Timeout(Duration.create(5, "seconds"))
+  var nick = ""
 
 
   def receive: PartialFunction[Any, Unit] = {
@@ -46,12 +47,13 @@ class PlayerAct extends Actor
         LoginSend ! NewUserInfo(data, sender())
 
       case 32652 =>
-        println("32652 here")
+        println("32652 here" + parsePocket653(data).NICKNAME)
+        nick = parsePocket653(data).NICKNAME
         LoginSend ! ChangeNick(1, data, sender())
 
       case 32654 =>
-        println("32654 here")
-        LoginSend ! ChangeNick(2, data, sender())
+        println("32654 here" + nick)
+        LoginSend ! ChangeNick(2, data, sender(), nick)
 
       case _ => println("Необработаный пакет № " + pocketNumber(data))
     }
