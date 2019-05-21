@@ -17,6 +17,7 @@ import scala.concurrent.duration.Duration
 class InGamePlayer extends Actor with InGameParse with InGameAnswer{
 
   var charId:Long = 0
+  var timer:Long = 0
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
 
 
@@ -27,6 +28,8 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
       case 245 =>
 
         val pData = parsePocket245(data)
+        timer = pData.timer
+        charId = pData.mapCharId
         println(pData)
         sender() ! Write(pocket643Answer(pData.mapCharId).data)
 
@@ -36,7 +39,11 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
         println(slotId)
         sender() ! Write(pocket115Answer(pData.mapCharId, slotId.x, slotId.y, slotId.dir).data)
 
-      case _ => println
+      case 278 =>
+        println("278 here")
+        val pData = parsePocket278(data)
+
+      case _ => println(pocketNumber(data))
     }
 
 

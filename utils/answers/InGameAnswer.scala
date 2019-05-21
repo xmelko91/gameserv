@@ -11,7 +11,8 @@ trait InGameAnswer extends DataFunc {
       intToByteArray(CharacterId) ++
       byteToByteArray(x) ++
       byteToByteArray(y) ++
-      byteToByteArray(dir)
+      byteToByteArray(dir) ++
+      shortToByteArray(0)
     LoginAnswerOut(ByteString(arr))
   }
 

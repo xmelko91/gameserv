@@ -14,7 +14,8 @@ trait DataFunc {
     for (i <- out.indices) {
       if (i < strArr.length) out(i) = {
         val c = strArr(i).toByte
-        if (c.toByte == 'ё'.toByte) (- 72).byteValue()
+        if (c.toByte >= '0'.toByte && c.toByte <= '9'.toByte) (c.toByte - '0'.toByte + 48).byteValue()
+        else if (c.toByte == 'ё'.toByte) (- 72).byteValue()
         else if(c.toByte == 'Ё'.toByte) (-88).byteValue()
         else if (c.toByte >= 'а'.toByte && c.toByte <= 'е'.toByte) (c.toByte - 'а'.toByte- 32).byteValue()
         else if (c.toByte >= 'А'.toByte && c.toByte <= 'Е'.toByte) (c.toByte - 'А'.toByte- 64).byteValue()

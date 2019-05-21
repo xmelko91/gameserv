@@ -5,13 +5,14 @@ import akka.stream.ActorMaterializer
 import app.actors.preStartGame.{LoginActor, WebServer}
 import app.actors.preStartGame.WebServer
 import app.actors.inGame.MapActor
+import utils.parsing.DataFunc
 import utils.sqlutils.SQLActor
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.Source
 import scala.util.control.Breaks
 
-object main extends App{
+object main extends App with DataFunc{
   println("Hi111111")
   import Settings._
 
