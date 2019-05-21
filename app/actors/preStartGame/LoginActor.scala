@@ -70,6 +70,7 @@ class LoginActor extends Actor
 
     case NewUserInfo(data, ref) => {
       val parsedData = parsePocket103(data)
+      println(data)
       if (parsedData.summ == 0) {
         if (!checkUserNickname(parsedData._nickname)) {
           println("bad nick")
