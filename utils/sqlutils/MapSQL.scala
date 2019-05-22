@@ -46,7 +46,8 @@ class MapSQL extends Actor{
           val x = rs.getShort("_x")
           val y = rs.getShort("_y")
           val dir = rs.getShort("_dir")
-          sender() ! Cords(charId, x, y, dir)
+          val gold = rs.getLong("money")
+          sender() ! Cords(charId, x, y, dir, gold)
         }
       }catch {
         case e => sender() ! e

@@ -24,7 +24,7 @@ class LoginActor extends Actor
   with CharacterAnswer
   with CheckBase {
 
-  private implicit val newUserData: ArrayBuffer[UserInfo] = new ArrayBuffer[UserInfo]()
+  private implicit var newUserData: ArrayBuffer[UserInfo] = new ArrayBuffer[UserInfo]()
   private implicit var UserId: ArrayBuffer[NewUserId] = new ArrayBuffer[NewUserId]()
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
 
@@ -220,6 +220,12 @@ class LoginActor extends Actor
           else ref ! Write(pocket656Answer(0).data)
         }
       }
+    }
+
+    case "Pill" => {
+      println("clean data from " + sender())
+      newUserData = newUserData.filter(x => !x.ref.equals(sender()))
+      UserId = UserId.filter(x => !x.ref.equals(sender()))
     }
 
     case a@_ => println(a + " " + context.system.name)

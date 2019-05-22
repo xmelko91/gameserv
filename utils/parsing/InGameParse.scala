@@ -14,8 +14,10 @@ trait InGameParse extends DataFunc {
     val x = readUByte(arr.readNBytes(1)(0))
     val y = readUByte(arr.readNBytes(1)(0))
     val dir = readUByte(arr.readNBytes(1)(0))
+    val x1 = ((x << 2) | (y >> 6)) & 0x03FF
+    val y1 = ((y << 4) | (dir >> 6)) & 0x03FF
     arr.close()
-    ParsedData137(x, y, dir)
+    ParsedData137(x1.shortValue(), y1.shortValue(), dir)
   }
 
   def parsePocket159(data: ByteString): ParsedData159 = {

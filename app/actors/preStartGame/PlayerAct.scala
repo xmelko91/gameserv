@@ -61,6 +61,7 @@ class PlayerAct extends Actor
 
     //Конец жизни Актора
     case PeerClosed     => {
+      LoginSend ! "Pill"
       context.stop(self)
       println("Player actor died")
       self ! PoisonPill
