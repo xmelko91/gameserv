@@ -20,6 +20,10 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
   var charId:Long = 0
   var gold: Long = 0
   var timer:Long = 0
+  var dir:Short = 0
+  var x: Short = 0
+  var y: Short = 0
+  var map: String = ""
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
 
 
@@ -28,13 +32,17 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
   def receive: PartialFunction[Any, Unit] = {
     case Received(data) => pocketNumber(data) match {
       case 125 =>
-        println("125 p")
+        println("125 p " + data)
         sender() ! Write(pocket189Answer().data)
+
+      case 159 => //chat message - 451back
+        println("159 here")
 
       case 137 =>
         println("137 p")
         val pData = parsePocket137(data)
-        println(pData)
+        val encoded = setEncode6(x,y,pData.x,pData.y)
+        println(encoded)
 
       case 245 =>
         val pData = parsePocket245(data)
@@ -46,8 +54,14 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
         val future = SqlSend ? CordsSearch(pData.mapCharId)
         val cords = Await.result(future, timeout.duration).asInstanceOf[Cords]
         this.gold = cords.gold
+        this.x = cords.x
+        this.y = cords.y
+        this.dir = cords.dir
+        this.map = cords.map
 
-        println(cords)
+        context.actorSelection(ActorPath("Map/" + this.map)) ! cords
+
+        println(cords + this.map)
         sender() ! Write(pocket115Answer(pData.mapCharId, cords.x, cords.y, cords.dir).data)
 
       case 278 =>
@@ -68,6 +82,12 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
         println("1058 here")
         sender() ! Write(pocket127Answer().data)
 
+      case 1096 => //список друзей - 1097 ответ
+        println("1096 here")
+        val pData = parsePocket1096(data)
+        println(data)
+        println(pData)
+
       case _ => println(pocketNumber(data))
     }
 
@@ -87,5 +107,5 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
 }
 
 object InGamePlayer{
-  case class Cords(CharacterId: Long, x: Short=0, y: Short=0, dir: Short=0, gold : Long)
+  case class Cords(CharacterId: Long, x: Short=0, y: Short=0, dir: Short=0, gold : Long, map : String)
 }

@@ -64,6 +64,22 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
+  def pocket170Answer(ItemId: Short, EquippedId: Short): LoginAnswerOut = {
+    val arr = shortToByteArray(170) ++
+      shortToByteArray(ItemId) ++
+      shortToByteArray(EquippedId) ++
+      byteToByteArray(0)
+    LoginAnswerOut(ByteString(arr))
+  }
+
+  def pocket172Answer(ItemId: Short): LoginAnswerOut = {
+    val arr = shortToByteArray(172) ++
+      shortToByteArray(ItemId) ++
+      shortToByteArray(0) ++
+      byteToByteArray(0)
+    LoginAnswerOut(ByteString(arr))
+  }
+
   def pocket176Answer(stats_switch: Short, stats: Int): Answer = {
     val arr = shortToByteArray(176) ++
       shortToByteArray(stats_switch) ++

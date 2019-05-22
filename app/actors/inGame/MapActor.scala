@@ -7,6 +7,7 @@ import akka.io.{IO, Tcp}
 import akka.util.Timeout
 import utils.sqlutils.MapSQL
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 
 class MapActor extends Actor{
@@ -22,6 +23,15 @@ class MapActor extends Actor{
 
 
   override def preStart(): Unit = {
+    val maps = new ArrayBuffer[String]()
+    maps += "city00"
+
+    for (map <- maps){
+      println("creating map " + map)
+      context.actorOf(Props(classOf[MapInstance]), name = map)
+    }
+
+
     context.actorOf(Props(classOf[MapSQL]), name = "MapSQL")
   }
 
