@@ -6,15 +6,7 @@ import akka.util.ByteString
 
 trait InGameParse extends DataFunc {
 
-  val DIRS = new Array[Short](8)
-  DIRS(0) = 0
-  DIRS(1) = 7
-  DIRS(2) = 6
-  DIRS(3) = 5
-  DIRS(4) = 4
-  DIRS(5) = 3
-  DIRS(6) = 2
-  DIRS(7) = 1
+  val DIRS: Array[Short] = Array(0, 7, 6, 5, 4, 3, 2, 1)
 
   def parsePocket137(data: ByteString): ParsedData137 = {
     val arr = new ByteArrayInputStream(data.toArray)

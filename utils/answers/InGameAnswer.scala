@@ -45,9 +45,9 @@ trait InGameAnswer extends MathUtils {
   }*/
 
 
-  def pocket141Answer(message_count: Short, CharacterId: Int, isGm: Short, baseLevel: Short, PremiumType: Byte, Race: Byte, message: String): Answer = {
+  def pocket141Answer(message_length: Short, CharacterId: Int, isGm: Short, baseLevel: Short, PremiumType: Byte, Race: Byte, message: String): Answer = {
     val arr = shortToByteArray(141) ++
-      shortToByteArray(message_count + 12) ++
+      shortToByteArray(message_length + 12) ++
       intToByteArray(CharacterId) ++
       shortToByteArray((isGm * 256) + baseLevel)
     byteToByteArray(PremiumType) ++
@@ -106,14 +106,27 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
+  def pocket451Answer(message: String, l1: Short=0, l2: Short=0, l3:Short=0, l6: Int=0): Answer = {
+    val arr = shortToByteArray(451) ++
+      shortToByteArray(message.length + 16) ++
+      byteToByteArray(l1) ++
+      byteToByteArray(l2) ++
+      byteToByteArray(l3) ++
+      byteToByteArray(0) ++
+      shortToByteArray(l6) ++
+      stringToByteArray("",6) ++
+      stringToByteArray(message,message.length)
+    Answer(ByteString(arr))
+  }
+
   def pocket643Answer(CharacterId: Long): Answer = {
     val arr = shortToByteArray(643) ++
       intToByteArray(CharacterId)
     Answer(ByteString(arr))
   }
 
-  def pocket1024Answer(count_Quests: Short, id_Quests: Short, progress_Quests: Byte): Answer = {
-    val arr = shortToByteArray(1024) ++
+  def pocket1025Answer(count_Quests: Short, id_Quests: Short, progress_Quests: Byte): Answer = {
+    val arr = shortToByteArray(1025) ++
       shortToByteArray(count_Quests) ++
       shortToByteArray(id_Quests) ++
       byteToByteArray(progress_Quests)
@@ -127,12 +140,11 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  def pocketGold(gold : Long): Answer = {
-    val arr = intToByteArray(0x0400) ++
+  def pocketGold(gold: Long): Answer = {
+    val arr = shortToByteArray(1024) ++
       intToByteArray(gold)
     Answer(ByteString(arr))
   }
-
 
 
   case class Answer(data: ByteString)

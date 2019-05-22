@@ -35,8 +35,13 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
         println("125 p " + data)
         sender() ! Write(pocket189Answer().data)
 
-      case 159 => //chat message - 451back
+      case 159 => //chat message - 141back
         println("159 here")
+        val pData = parsePocket159(data)
+        if (!pData.message.split(":")(1).strip().startsWith("@")){
+          println(pData.message)
+        }
+        ///sender() ! Write(pocket141Answer().data)
 
       case 137 =>
         println("137 p")
@@ -59,7 +64,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
         this.dir = cords.dir
         this.map = cords.map
 
-        context.actorSelection(ActorPath("Map/" + this.map)) ! cords
+        MapSend ! cords
 
         println(cords + this.map)
         sender() ! Write(pocket115Answer(pData.mapCharId, cords.x, cords.y, cords.dir).data)
@@ -102,10 +107,13 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer{
 
 
 
-
+  def MapSend: ActorSelection = context.actorSelection(ActorPath("Map/" + this.map))
   def SqlSend: ActorSelection = context.actorSelection(ActorPath("Map/MapSQL"))
 }
 
 object InGamePlayer{
+
+  case class Message(nick: String, message: String)
+
   case class Cords(CharacterId: Long, x: Short=0, y: Short=0, dir: Short=0, gold : Long, map : String)
 }
