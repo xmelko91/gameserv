@@ -4,22 +4,15 @@ import java.io.ByteArrayInputStream
 
 import akka.util.ByteString
 
-trait InGameParse extends DataFunc {
-
-  val DIRS: Array[Short] = Array(0, 7, 6, 5, 4, 3, 2, 1)
+trait InGameParse extends DataFunc with MathUtils {
 
   def parsePocket137(data: ByteString): ParsedData137 = {
     val arr = new ByteArrayInputStream(data.toArray)
     arr.readNBytes(2)
     val nulled = readUByte(arr.readNBytes(1)(0))
-    val x = readUByte(arr.readNBytes(1)(0))
-    val y = readUByte(arr.readNBytes(1)(0))
-    val dir = readUByte(arr.readNBytes(1)(0))
-    val x1 = ((x << 2) | (y >> 6)) & 0x03FF
-    val y1 = ((y << 4) | (dir >> 6)) & 0x03FF
-    val dir1 = DIRS(dir & 0x0F)
+    val cord: Cords3 = GetEncoded3(arr.readNBytes(3))
     arr.close()
-    ParsedData137(x1.shortValue(), y1.shortValue(), dir1)
+    ParsedData137(cord.x, cord.y, cord.dir)
   }
 
   def parsePocket159(data: ByteString): ParsedData159 = {

@@ -1,7 +1,7 @@
 package app.actors.inGame
 
 import akka.actor.{Actor, ActorRef}
-import app.actors.inGame.InGamePlayer.Cords
+import app.actors.inGame.InGamePlayer.{Cords, PlayerMessage}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -12,14 +12,26 @@ class MapInstance extends Actor {
   val playersOnMap = new ArrayBuffer[Player]()
 
   override def receive: Receive = {
-    case Cords(id, x, y, dir,_,_) =>
+    case c: Cords =>
       println("Player on map")
-      playersOnMap += Player(sender(), x, y, dir, id)
+      playersOnMap += Player(sender(), c)
 
+    case msg : PlayerMessage =>
+      //можно добавить проверку мата и тп здесь
+      for (p <- playersOnMap){
+        p.ref ! msg
+      }
+
+    case "dead" =>
+      playersOnMap.map(x => {
+        if (x.ref.equals(sender())){
+          playersOnMap -= x
+        }
+      })
     case a@_ => println(a)
   }
 }
 
 object MapInstance{
-  case class Player(ref : ActorRef, x: Int, y: Int, dir: Int, id: Long)
+  case class Player(ref : ActorRef, stats: Cords)
 }

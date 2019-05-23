@@ -45,12 +45,12 @@ trait InGameAnswer extends MathUtils {
   }*/
 
 
-  def pocket141Answer(message_length: Short, CharacterId: Int, isGm: Short, baseLevel: Short, PremiumType: Byte, Race: Byte, message: String): Answer = {
+  def pocket141Answer(CharacterId: Long, isGm: Int, baseLevel: Int, PremiumType: Short, Race: Short, message: String): Answer = {
     val arr = shortToByteArray(141) ++
-      shortToByteArray(message_length + 12) ++
+      shortToByteArray(message.length + 16) ++
       intToByteArray(CharacterId) ++
-      shortToByteArray((isGm * 256) + baseLevel)
-    byteToByteArray(PremiumType) ++
+      shortToByteArray((isGm * 256) + baseLevel) ++
+      byteToByteArray(PremiumType) ++
       byteToByteArray(Race) ++
       stringToByteArray(message, 0)
     Answer(ByteString(arr))
@@ -87,8 +87,45 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  def pocket189Answer(): Answer = {
-    Answer(ByteString(0))
+  def pocket189Answer(Stats_count: Short, _str: Byte, _str_append: Byte,
+                      _agi: Byte, _agi_append: Byte, _vit: Byte,
+                      _vit_append: Byte, _int: Byte, _int_append: Byte,
+                      _dex: Byte, _dex_append: Byte, _luk: Byte,
+                      _luk_append: Byte, atk1: Short, atk2: Short,
+                      matkMax: Short, matkMin: Short, def1: Short,
+                      def2: Short, mdef1: Short, mdef2: Short,
+                      hit: Short, flee1: Short, flee2: Short,
+                      critical: Short, karma: Short, manner: Short): LoginAnswerOut =
+  {
+    val arr = shortToByteArray(189) ++
+      shortToByteArray(Stats_count) ++
+      byteToByteArray(_str) ++
+      byteToByteArray(_str_append) ++
+      byteToByteArray(_agi) ++
+      byteToByteArray(_agi_append) ++
+      byteToByteArray(_vit) ++
+      byteToByteArray(_vit_append) ++
+      byteToByteArray(_int) ++
+      byteToByteArray(_int_append) ++
+      byteToByteArray(_dex) ++
+      byteToByteArray(_dex_append) ++
+      byteToByteArray(_luk) ++
+      byteToByteArray(_luk_append) ++
+      shortToByteArray(atk1) ++
+      shortToByteArray(atk2) ++
+      shortToByteArray(matkMax) ++
+      shortToByteArray(matkMin) ++
+      shortToByteArray(def1) ++
+      shortToByteArray(def2) ++
+      shortToByteArray(mdef1) ++
+      shortToByteArray(mdef2) ++
+      shortToByteArray(hit) ++
+      shortToByteArray(flee1) ++
+      shortToByteArray(flee2) ++
+      shortToByteArray(critical) ++
+      shortToByteArray(karma) ++
+      shortToByteArray(manner)
+    LoginAnswerOut(ByteString(arr))
   }
 
   def pocket321Answer(stats_switch: Short, stats: Int, stats_bonus: Int): Answer = {

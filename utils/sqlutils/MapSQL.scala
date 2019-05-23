@@ -48,10 +48,31 @@ class MapSQL extends Actor{
           val dir = rs.getShort("_dir1")
           val gold = rs.getLong("money")
           val map = rs.getString("mapName")
-          sender() ! Cords(charId, x, y, dir, gold, map)
+          val race = rs.getShort("clothesColor")
+          val userId = rs.getLong("loginAccountId")
+          val baseLvl = rs.getInt("baseLevel")
+          val nick = rs.getString("name")
+
+          println("ID got " + userId)
+          val stateUser = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`login_account` WHERE `loginAccountId` = ?;")
+          stateUser.setLong(1, userId)
+          val uRs = stateUser.executeQuery()
+
+          if (uRs.first()){
+
+            val isGm = uRs.getShort("isGM")
+            val premiumType = uRs.getShort("premiumType")
+
+
+            sender() ! Cords(charId, x, y, dir, gold, map, isGm,race, premiumType, baseLvl, nick)
+          }
         }
+
       }catch {
-        case e => sender() ! e
+        case e => {
+          e.printStackTrace()
+          sender() ! e
+        }
       }
     }
 
