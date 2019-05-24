@@ -200,7 +200,7 @@ trait LoginAnswer extends DataFunc {
       intToByteArray(0) ++
       shortToByteArray(hairColor) ++
       shortToByteArray(clothesColor) ++
-      stringToByteArray(NickName, 24) ++
+      stringToByteArray(NickName, 18) ++
       byteToByteArray(_str) ++
       byteToByteArray(_agi) ++
       byteToByteArray(_vit) ++

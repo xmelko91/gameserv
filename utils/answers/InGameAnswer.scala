@@ -22,7 +22,7 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  def pocket128Answer(CharacterId: Int, switch_count: Byte = 0): Answer = {
+  def pocket128Answer(CharacterId: Long, switch_count: Byte = 0): Answer = {
     val arr = shortToByteArray(128) ++
       intToByteArray(CharacterId) ++
       byteToByteArray(switch_count)
@@ -77,6 +77,12 @@ trait InGameAnswer extends MathUtils {
     val arr = shortToByteArray(176) ++
       shortToByteArray(stats_switch) ++
       intToByteArray(stats)
+    Answer(ByteString(arr))
+  }
+
+  def pocket179Answer(): Answer = {
+    val arr = shortToByteArray(179) ++
+      byteToByteArray(1)
     Answer(ByteString(arr))
   }
 

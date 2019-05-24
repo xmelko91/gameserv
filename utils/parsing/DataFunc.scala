@@ -14,8 +14,9 @@ trait DataFunc {
     for (i <- out.indices) {
       if (i < strArr.length) out(i) = {
         val c = strArr(i)
-
-        fromSeq(c)
+        val b: Byte =  fromSeq(c)
+        if (b == 0) c.toByte
+        else b
       }
       else out(i) = 0
     }

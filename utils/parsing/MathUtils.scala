@@ -56,7 +56,11 @@ trait MathUtils extends DataFunc {
     (dir & 0x0F).shortValue()
   }
 
+  def StatsCalculatind = (stats: CharStats) => {
 
+  }
+
+  case class CharStats(str: Short, agi: Short, vit: Short, int: Short, dex: Short, luk: Short)
   case class Cords3(x: Short, y: Short, dir: Short)
   case class Cords6(x: Short, y: Short, x1: Short, y1: Short, sy0: Short, sx0: Short)
 

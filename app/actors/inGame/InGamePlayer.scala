@@ -9,7 +9,7 @@ import utils.answers.InGameAnswer
 import utils.parsing.InGameParse
 import akka.pattern.ask
 import app.actors.inGame.InGamePlayer.{Cords, PlayerMessage}
-import utils.sqlutils.MapSQL.CordsSearch
+import utils.sqlutils.MapSQL.{CordsSearch, GetAllItems, ItemsSet}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -32,6 +32,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
   var x: Short = 0
   var y: Short = 0
   var map: String = ""
+  var playerItems: Array[ItemsSet] = _
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
 
 
@@ -79,6 +80,16 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
         }
       //sender() ! Write(pocket141Answer().data)
 
+      case 178 => //свич перса
+
+        sender() ! Write(pocket128Answer(this.charId).data)
+        sender() ! Write(pocket179Answer().data)
+
+        MapSend ! "dead"
+        context.stop(self)
+        println("In-game actor died")
+        self ! PoisonPill
+
       case 245 =>
         val pData = parsePocket245(data)
         this.timer = pData.timer
@@ -102,6 +113,9 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
         this.baseLvl = cords.baseLvl
         this.jobId = cords.jobId
         this.sex = cords.sex
+
+        val getItems = SqlSend ? GetAllItems(this.charId)
+        this.playerItems = Await.result(getItems, timeout.duration).asInstanceOf[Array[ItemsSet]]
 
         MapSend ! cords
 

@@ -12,6 +12,7 @@ import app.actors.preStartGame.LoginActor.{NewUserId, UserInfo}
 import utils.answers.CharacterAnswer.CharStats
 import utils.answers.{CharacterAnswer, LoginAnswer}
 import utils.parsing.ParserServ
+import utils.sqlutils.MapSQL.AddNewItem
 import utils.sqlutils.SQLActor._
 
 import scala.collection.mutable.ArrayBuffer
@@ -70,7 +71,6 @@ class LoginActor extends Actor
 
     case NewUserInfo(data, ref) => {
       val parsedData = parsePocket103(data)
-      println(data)
       if (parsedData.summ == 0) {
         if (!checkUserNickname(parsedData._nickname)) {
           println("bad nick")
@@ -90,7 +90,6 @@ class LoginActor extends Actor
       }
       else if (parsedData.summ == 30) {
         val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF)
-        println(isMale + "  Polll")// пол персонажа
         val job = getJobFract(parsedData._jobid) // фракция и класс
 
         val userInfo: UserInfo = getFromUserData(ref)
@@ -125,12 +124,18 @@ class LoginActor extends Actor
           val loginID = result._2
           val charID = result._1
 
+          //добавление базовых предметов персонажу
+          context.actorSelection(ActorPath("Map/MapSQL")) ! AddNewItem(charID, 31000)
+          context.actorSelection(ActorPath("Map/MapSQL")) ! AddNewItem(charID, 20450)
+
+
           UserId += NewUserId(loginID, charID, ref, 0)
 
           if (charID == -1) Write(pocket110Answer(250).data) // ошибка бд
           else {
             //всё ОК - шлём 109й
-            val out = pocket109NewChar(charID, job.jobId, isMale, 0, job.fraction, parsedData._nickname)
+            println("Отсылаем пакет 109 "+ parsedData._nickname)
+            val out = pocket109NewChar(charID, job.jobId, isMale, characterInfo.hairColor, job.fraction, characterInfo.name)
             ref ! Write(out.data)
           }
         }
@@ -173,7 +178,7 @@ class LoginActor extends Actor
       }
       else {
         charId = getFromUserId(ref).charId
-        println(data.length)
+        println(data.length + "  ----   it's here ")
         //charId = getFromUserIdS(ref, user).charId
         map = "city00"
         //Дефолтное значение мапы

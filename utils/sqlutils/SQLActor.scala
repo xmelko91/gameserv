@@ -41,13 +41,16 @@ class SQLActor extends Actor with DataFunc {
       if (connection == null || connection.isClosed) connect()
       try {
         val statement = connection.createStatement()
-        val n = "SELECT * FROM " + dbName + "." + table + " WHERE " + column + " = '" + stat + "';"
+        val n = "SELECT `name` FROM " + dbName + "." + table + ";"
         val rs = statement.executeQuery(n)
-        if (rs.first()) {
-          val id = rs.getString(column)
-          println(id + " sended")
-          sender() ! id
-        }else sender() ! ""
+        var b: Boolean = false
+        while (rs.next()) {
+          if (stat.toLowerCase().equals(rs.getString(column).toLowerCase())){
+            sender() ! stat
+            b = true
+          }
+        }
+        if (!b) sender() ! ""
       } catch {
         case e => {
           e.printStackTrace()
@@ -75,7 +78,7 @@ class SQLActor extends Actor with DataFunc {
         }else{
           ID = logId
         }
-
+        println("stage                 1")
         if (ID != -1) {
           i = 1
           val statementUpdate = connection.prepareStatement("INSERT INTO `" + dbName +
@@ -83,6 +86,7 @@ class SQLActor extends Actor with DataFunc {
             ID + "', '" + cInfo.jobId + "', '" + cInfo.local3 + "', '" + cInfo.clothesColor + "', '" + cInfo.hairColor + "', '" + cInfo.name + "', '" + cInfo.slot + "');")
           statementUpdate.executeUpdate()
           statementUpdate.close()
+          println("stage                 2")
 
           val statement = connection.createStatement()
           val n = "SELECT * FROM " + dbName + ".char_account WHERE `name` = '" + cInfo.name + "';"
@@ -92,6 +96,8 @@ class SQLActor extends Actor with DataFunc {
           charId = rs.getInt("characterId")
           println("Adding is : " + charId)
           sender() ! (charId, ID)
+          println("stage                 3 " + charId)
+
         }
         else sender() ! (1.longValue(), 1.longValue())
       } catch {

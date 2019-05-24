@@ -88,9 +88,9 @@ class MapSQL extends Actor {
         statement.setShort(1, nameId)
         println("Searching item " + nameId + "   ")
         val rs = statement.executeQuery()
-        statement.close()
         rs.first()
 
+        println("adding new Item")
         var i = 1
         val addState = connection.
           prepareStatement("INSERT INTO `" + dbName +
@@ -109,6 +109,7 @@ class MapSQL extends Actor {
       }
     }
 
+      //@param return Array[ItemsSet]
     case GetAllItems(id) => {
 
       if (connection == null || connection.isClosed) connect()
