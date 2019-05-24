@@ -71,6 +71,7 @@ trait LoginAnswer extends DataFunc {
 
     if (slot == -1) {
       for (p <- arrayChars) {
+        println("sex here is " + p.local3Sex)
         arr = arr ++ (intToByteArray(p.charId) ++
           intToByteArray(p.baseExp) ++
           intToByteArray(p.money) ++

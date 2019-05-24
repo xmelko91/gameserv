@@ -89,7 +89,8 @@ class LoginActor extends Actor
         }
       }
       else if (parsedData.summ == 30) {
-        val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF) // пол персонажа
+        val isMale: Int = (parsedData._ismale >> 15) | (0 & 0x7FFF)
+        println(isMale + "  Polll")// пол персонажа
         val job = getJobFract(parsedData._jobid) // фракция и класс
 
         val userInfo: UserInfo = getFromUserData(ref)

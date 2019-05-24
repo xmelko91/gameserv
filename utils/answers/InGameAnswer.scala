@@ -2,8 +2,7 @@ package utils.answers
 
 import akka.http.scaladsl.model.DateTime
 import akka.util.ByteString
-import app.actors.preStartGame.LoginActor.LoginAnswerOut
-import utils.parsing.{MathUtils}
+import utils.parsing.MathUtils
 
 trait InGameAnswer extends MathUtils {
 
@@ -38,21 +37,15 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  /*def pocket189Answer(Stats_count: Short, _str: Byte, _str_append: Byte, _agi: Byte, _agi_append: Byte, _vit: Byte, _vit_append: Byte, _int: Byte, _int_append: Byte, _dex: Byte, _dex_append: Byte, _luk: Byte, _luk_append: Byte, x1: Short, x2: Short, x3: Short, x4: Short, x5: Short, x6: Short, x7: Short, x8: Short, x9: Short, x10: Short, x11: Short, x12: Short, x13: Short, x14: Short): LoginAnswerOut =
-  {
-    val arr = shortToByteArray(189) ++ intToByteArray()
-    LoginAnswerOut(ByteString(arr))
-  }*/
 
-
-  def pocket141Answer(CharacterId: Long, isGm: Int, baseLevel: Int, PremiumType: Short, Race: Short, message: String): Answer = {
+  def pocket141Answer(CharacterId: Long, isGm: Int, baseLevel: Int, PremiumType: Short, Race: Short, message: String, msgLength: Int): Answer = {
     val arr = shortToByteArray(141) ++
-      shortToByteArray(message.length + 16) ++
+      shortToByteArray(msgLength + 12) ++
       intToByteArray(CharacterId) ++
       shortToByteArray((isGm * 256) + baseLevel) ++
       byteToByteArray(PremiumType) ++
       byteToByteArray(Race) ++
-      stringToByteArray(message, 0)
+      stringToByteArray(message, msgLength)
     Answer(ByteString(arr))
   }
 
@@ -64,20 +57,20 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  def pocket170Answer(ItemId: Short, EquippedId: Short): LoginAnswerOut = {
+  def pocket170Answer(ItemId: Short, EquippedId: Short): Answer = {
     val arr = shortToByteArray(170) ++
       shortToByteArray(ItemId) ++
       shortToByteArray(EquippedId) ++
       byteToByteArray(0)
-    LoginAnswerOut(ByteString(arr))
+    Answer(ByteString(arr))
   }
 
-  def pocket172Answer(ItemId: Short): LoginAnswerOut = {
+  def pocket172Answer(ItemId: Short): Answer = {
     val arr = shortToByteArray(172) ++
       shortToByteArray(ItemId) ++
       shortToByteArray(0) ++
       byteToByteArray(0)
-    LoginAnswerOut(ByteString(arr))
+    Answer(ByteString(arr))
   }
 
   def pocket176Answer(stats_switch: Short, stats: Int): Answer = {
@@ -87,15 +80,15 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  def pocket189Answer(Stats_count: Short, _str: Byte, _str_append: Byte,
-                      _agi: Byte, _agi_append: Byte, _vit: Byte,
-                      _vit_append: Byte, _int: Byte, _int_append: Byte,
-                      _dex: Byte, _dex_append: Byte, _luk: Byte,
-                      _luk_append: Byte, atk1: Short, atk2: Short,
-                      matkMax: Short, matkMin: Short, def1: Short,
-                      def2: Short, mdef1: Short, mdef2: Short,
-                      hit: Short, flee1: Short, flee2: Short,
-                      critical: Short, karma: Short, manner: Short): LoginAnswerOut =
+  def pocket189Answer(Stats_count: Int, _str: Short, _str_append: Short,
+                      _agi: Short, _agi_append: Short, _vit: Short,
+                      _vit_append: Short, _int: Short, _int_append: Short,
+                      _dex: Short, _dex_append: Short, _luk: Short,
+                      _luk_append: Short, atk1: Int, atk2: Int,
+                      matkMax: Int, matkMin: Int, def1: Int,
+                      def2: Int, mdef1: Int, mdef2: Int,
+                      hit: Int, flee1: Int, flee2: Int,
+                      critical: Int, karma: Int, manner: Int): Answer =
   {
     val arr = shortToByteArray(189) ++
       shortToByteArray(Stats_count) ++
@@ -125,7 +118,7 @@ trait InGameAnswer extends MathUtils {
       shortToByteArray(critical) ++
       shortToByteArray(karma) ++
       shortToByteArray(manner)
-    LoginAnswerOut(ByteString(arr))
+    Answer(ByteString(arr))
   }
 
   def pocket321Answer(stats_switch: Short, stats: Int, stats_bonus: Int): Answer = {
@@ -153,6 +146,43 @@ trait InGameAnswer extends MathUtils {
       shortToByteArray(l6) ++
       stringToByteArray("",6) ++
       stringToByteArray(message,message.length)
+    Answer(ByteString(arr))
+  }
+
+  def pocket556Answer(CharacteId: Long, walk_speed: Int, options1: Int,
+                      options2: Int, options3: Int, jobid: Int,
+                      tochka: Int, viewWeapon: Int, viewShield: Int,
+                      viewHead: Int, hairColor: Int, clothesColor: Int,
+                      guildEmblem: Int, manner: Int, _local_11: Long,
+                      karma: Short, sex: Short, x: Short, y: Short, x1: Short,
+                      y1: Short, sx: Short, sy: Short, baseLevel: Int): Answer = {
+
+
+    val arr = shortToByteArray(556) ++
+      stringToByteArray("", 1) ++
+      intToByteArray(CharacteId) ++
+      shortToByteArray(walk_speed) ++
+      shortToByteArray(options1) ++
+      shortToByteArray(options2) ++
+      intToByteArray(options3) ++
+      shortToByteArray(jobid) ++
+      shortToByteArray(tochka) ++
+      shortToByteArray(viewWeapon) ++
+      shortToByteArray(viewShield) ++
+      stringToByteArray("", 6) ++
+      shortToByteArray(viewHead) ++
+      stringToByteArray("", 2) ++
+      shortToByteArray(hairColor) ++
+      shortToByteArray(clothesColor) ++
+      stringToByteArray("", 6) ++
+      shortToByteArray(guildEmblem) ++
+      shortToByteArray(manner) ++
+      intToByteArray(_local_11) ++
+      byteToByteArray(karma) ++
+      byteToByteArray(sex) ++
+      SetEncodedArray6(x,y,x1,y1,sy,sx) ++
+      stringToByteArray("", 2) ++
+      shortToByteArray(baseLevel)
     Answer(ByteString(arr))
   }
 

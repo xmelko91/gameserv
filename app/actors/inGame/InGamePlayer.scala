@@ -20,8 +20,10 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
   var player: ActorRef = _
   var nickName: String = ""
   var race: Short = 0
+  var sex: Short = 0
   var premiumType: Short = 0
   var baseLvl: Int = 0
+  var jobId:Short = 0
   var isGM: Short = 0
   var charId: Long = 0
   var gold: Long = 0
@@ -38,16 +40,9 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
   def receive: PartialFunction[Any, Unit] = {
 
     case msg: PlayerMessage =>
-      var message: String = ""
-      if (this.nickName.equals(msg.nick)) {
-        message = "You : " + msg.message
-      } else {
-        message = msg.nick + ": " + msg.message
-      }
-      println(message)
-
-      player ! Write(pocket141Answer(msg.charId, msg.isGm, msg.baseLvl, msg.premiumType, msg.race, message).data)
-      player ! Write(pocket451Answer(message).data)
+      var pon: Short = 1
+      if (this.race == msg.race || msg.premiumType == 2 || this.premiumType == 1 || this.premiumType == 2) pon = 0
+      player ! Write(pocket141Answer(msg.charId, msg.isGm, msg.baseLvl, msg.premiumType, pon,msg.message, msg.messageLength).data)
 
 
     case Received(data) => pocketNumber(data) match {
@@ -59,10 +54,19 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
       case 137 =>
         println("137 p")
         val pData = parsePocket137(data)
+        println(data)
+        val ar = GetEncoded3(Array(pData.x, pData.y, pData.dir))
+
+
+        player ! Write(pocket556Answer(charId,2,0,0,0,this.jobId,
+          0,1,1,0,1,this.race,0,0,0,0,this.sex,
+          this.x,this.y, ar.x, ar.y,0,0,this.baseLvl).data)
+        this.x = pData.x
+        this.y = pData.y
+        this.dir = pData.dir
 
 
       case 159 => //chat message - 141back
-        println("159 here")
         val pData = parsePocket159(data)
 
         val senderNickname = pData.message.split(":")(0)
@@ -70,7 +74,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
 
 
         if (!msg.strip().startsWith("@")) {
-          MapSend ! PlayerMessage(senderNickname, msg, this.charId, this.isGM, this.baseLvl, this.premiumType, this.race)
+          MapSend ! PlayerMessage(pData.message, pData.message_count, this.charId, this.isGM, this.baseLvl, this.premiumType, this.race)
           println(pData.message)
         }
       //sender() ! Write(pocket141Answer().data)
@@ -96,6 +100,8 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
         this.dir = cords.dir
         this.map = cords.map
         this.baseLvl = cords.baseLvl
+        this.jobId = cords.jobId
+        this.sex = cords.sex
 
         MapSend ! cords
 
@@ -145,8 +151,10 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
 
 object InGamePlayer {
 
-  case class PlayerMessage(nick: String, message: String, charId: Long, isGm: Int, baseLvl: Int, premiumType: Short, race: Short)
+  case class PlayerMessage(message: String, messageLength: Int, charId: Long, isGm: Int, baseLvl: Int, premiumType: Short, race: Short)
 
-  case class Cords(CharacterId: Long, x: Short = 0, y: Short = 0, dir: Short = 0, gold: Long, map: String, isGm: Short, race: Short, premiumType: Short, baseLvl: Int, nickName: String)
+  case class Cords(CharacterId: Long, x: Short = 0, y: Short = 0, dir: Short = 0,
+                   gold: Long, map: String, isGm: Short, race: Short, premiumType: Short, baseLvl: Int,
+                   nickName: String, jobId: Short, sex: Short)
 
 }

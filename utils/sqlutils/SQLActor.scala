@@ -177,7 +177,7 @@ class SQLActor extends Actor with DataFunc {
             val sp = rs.getShort("sp")
             val maxSp = rs.getInt("maxSp")
             val jobId = rs.getInt("jobId")
-            val local3 = rs.getInt("_local_3")
+            val local3 = -rs.getInt("_local_3")
             val baseLvl = rs.getInt("baseLevel")
             val hairColor = rs.getInt("hairColor")
             val clothesColor = rs.getInt("clothesColor")
