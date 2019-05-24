@@ -5,11 +5,12 @@ import java.sql.DriverManager
 import java.util.Properties
 
 import akka.actor.Actor
-import app.actors.inGame.InGamePlayer.Cords
+import app.actors.inGame.InGamePlayer._
+import utils.parsing.MathUtils
 
 import scala.collection.mutable.ArrayBuffer
 
-class MapSQL extends Actor {
+class MapSQL extends Actor with MathUtils{
 
   import MapSQL._
   import app.Settings._
@@ -45,9 +46,12 @@ class MapSQL extends Actor {
         val rs = statement.executeQuery()
 
         if (rs.first()) {
-          val x = rs.getShort("_x1")
-          val y = rs.getShort("_y1")
-          val dir = rs.getShort("_dir1")
+          val x = rs.getShort("_x")
+          val y = rs.getShort("_y")
+          val x1 = rs.getShort("_x1")
+          val y1 = rs.getShort("_y1")
+          val dir = rs.getShort("_dir")
+          val dir1 = rs.getShort("_dir1")
           val gold = rs.getLong("money")
           val map = rs.getString("mapName")
           val race = rs.getShort("clothesColor")
@@ -56,6 +60,16 @@ class MapSQL extends Actor {
           val nick = rs.getString("name")
           val jobId = rs.getShort("jobId")
           val sex = rs.getShort("_local_3")
+          val hairColor = rs.getShort("hairColor")
+          val str = rs.getShort("strrr")
+          val agi = rs.getShort("agiii")
+          val vit = rs.getShort("vittt")
+          val int = rs.getShort("inttt")
+          val dex = rs.getShort("dexxx")
+          val luk = rs.getShort("lukkk")
+          val statCount = rs.getShort("stats_count")
+          val skillCount = rs.getShort("skill_count")
+          val stats: CharBaseStats = new CharBaseStats(str,agi,vit,int,dex,luk,skillCount, statCount)
 
           println("ID got " + userId)
           val stateUser = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`login_account` WHERE `loginAccountId` = ?;")
@@ -68,12 +82,12 @@ class MapSQL extends Actor {
             val premiumType = uRs.getShort("premiumType")
 
 
-            sender() ! Cords(charId, x, y, dir, gold, map, isGm, race, premiumType, baseLvl, nick, jobId, sex)
+            sender() ! Cords(charId, x, x1, y, y1, dir, dir1, gold, map, isGm, race, premiumType, baseLvl, nick, jobId, sex, hairColor, stats)
           }
         }
 
       } catch {
-        case e => {
+        case e:Throwable => {
           e.printStackTrace()
           sender() ! e
         }
@@ -109,12 +123,39 @@ class MapSQL extends Actor {
       }
     }
 
+    case UpStat(id, stat) =>{
+      if (connection == null || connection.isClosed) connect()
+
+      try {
+        val statement = connection.prepareStatement("SELECT "+ stat +", stats_count FROM `" + dbName + "`.`char_account` WHERE `characterId` = ?;")
+        statement.setLong(1, id)
+        val rs = statement.executeQuery()
+        if (rs.first()) {
+          println(id)
+          val par = rs.getShort(stat)
+          val statsCount = rs.getShort("stats_count")
+          if (statsCount < upgradePrice(par)) sender() ! (-1, -1)
+          else {
+            val state = connection.prepareStatement("UPDATE `" + dbName + "`.`char_account` SET `" + stat + "` = ?, `stats_count` = ? WHERE (`characterId` = ?);")
+            state.setShort(1, (par + 1).shortValue())
+            state.setShort(2, (statsCount - upgradePrice(par)).shortValue())
+            state.setLong(3, id)
+            state.executeUpdate()
+          }
+          sender() ! ((par + 1).shortValue(), (statsCount - upgradePrice(par)).shortValue())
+        }else sender() ! ((-1).shortValue(), (-1).shortValue())
+      }catch {
+        case e:Throwable => {
+          sender() ! e
+        }
+      }
+    }
+
       //@param return Array[ItemsSet]
     case GetAllItems(id) => {
-
+      val out = new ArrayBuffer[ItemsSet]()
       if (connection == null || connection.isClosed) connect()
       try {
-        val out = new ArrayBuffer[ItemsSet]()
         val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`player_items` WHERE `id` = ?;")
         statement.setLong(1, id)
         val rs = statement.executeQuery()
@@ -179,7 +220,7 @@ class MapSQL extends Actor {
         sender() ! out.toArray
 
       } catch {
-        case e => sender() ! e
+        case e:Throwable => sender() ! out.toArray
       }
     }
 

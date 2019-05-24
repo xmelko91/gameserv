@@ -2,6 +2,7 @@ package utils.answers
 
 import akka.http.scaladsl.model.DateTime
 import akka.util.ByteString
+import app.actors.inGame.InGamePlayer.CalculatedStats
 import utils.parsing.MathUtils
 
 trait InGameAnswer extends MathUtils {
@@ -86,6 +87,19 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
+  def pocket188Answer(operEnd:Short, statN: Int, stat:Short): Answer = {
+    val arr = shortToByteArray(188) ++
+      shortToByteArray(statN) ++
+      byteToByteArray(operEnd) ++
+      byteToByteArray(stat)
+    Answer(ByteString(arr))
+  }
+
+  def pocket189Answer(s: CalculatedStats): Answer = pocket189Answer(s.Stats_count, s._str, s._str_append, s._agi,
+    s._agi_append, s._vit, s._vit_append, s._int, s._int_append, s._dex, s._dex_append,
+    s._luk, s._luk_append, s.atk1, s.atk2, s.matkMax, s.matkMin, s.def1, s.def2,
+    s.mdef1, s.mdef2, s.hit, s.flee1, s.flee2, s.critical, s.karma, s.manner)
+
   def pocket189Answer(Stats_count: Int, _str: Short, _str_append: Short,
                       _agi: Short, _agi_append: Short, _vit: Short,
                       _vit_append: Short, _int: Short, _int_append: Short,
@@ -94,8 +108,7 @@ trait InGameAnswer extends MathUtils {
                       matkMax: Int, matkMin: Int, def1: Int,
                       def2: Int, mdef1: Int, mdef2: Int,
                       hit: Int, flee1: Int, flee2: Int,
-                      critical: Int, karma: Int, manner: Int): Answer =
-  {
+                      critical: Int, karma: Int, manner: Int): Answer = {
     val arr = shortToByteArray(189) ++
       shortToByteArray(Stats_count) ++
       byteToByteArray(_str) ++
@@ -142,7 +155,7 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  def pocket451Answer(message: String, l1: Short=0, l2: Short=0, l3:Short=0, l6: Int=0): Answer = {
+  def pocket451Answer(message: String, l1: Short = 0, l2: Short = 0, l3: Short = 0, l6: Int = 0): Answer = {
     val arr = shortToByteArray(451) ++
       shortToByteArray(message.length + 16) ++
       byteToByteArray(l1) ++
@@ -150,8 +163,45 @@ trait InGameAnswer extends MathUtils {
       byteToByteArray(l3) ++
       byteToByteArray(0) ++
       shortToByteArray(l6) ++
-      stringToByteArray("",6) ++
-      stringToByteArray(message,message.length)
+      stringToByteArray("", 6) ++
+      stringToByteArray(message, message.length)
+    Answer(ByteString(arr))
+  }
+
+  def pocket554Answer(CharacteId: Long, walk_speed: Int, options: Int,
+                      options1: Int, options2: Int, jobid: Int,
+                      tochka: Int, viewWeapon: Int, viewShield: Int,
+                      viewHead: Int, hairColor: Int, clothesColor: Int,
+                      guildEmblem: Int, manner: Int, options3: Long,
+                      karma: Short, sex: Short, x: Short, y: Short, dir: Short,
+                      isGM: Short, isDead: Short, baseLevel: Int): Answer = {
+
+    val arr = shortToByteArray(554) ++
+      intToByteArray(CharacteId) ++
+      shortToByteArray(walk_speed) ++
+      shortToByteArray(options) ++
+      shortToByteArray(options1) ++
+      intToByteArray(options2) ++
+      shortToByteArray(jobid) ++
+      shortToByteArray(tochka) ++
+      shortToByteArray(viewWeapon) ++
+      shortToByteArray(viewShield) ++
+      stringToByteArray("", 2) ++
+      shortToByteArray(viewHead) ++
+      stringToByteArray("", 2) ++
+      shortToByteArray(hairColor) ++
+      shortToByteArray(clothesColor) ++
+      stringToByteArray("", 6) ++
+      shortToByteArray(guildEmblem) ++
+      shortToByteArray(manner) ++
+      intToByteArray(options3) ++
+      byteToByteArray(karma) ++
+      byteToByteArray(sex) ++
+      SetEncodedArray3(x, y, dir) ++
+      byteToByteArray(isGM) ++
+      stringToByteArray("", 1) ++
+      byteToByteArray(isDead) ++
+      shortToByteArray(baseLevel)
     Answer(ByteString(arr))
   }
 
@@ -186,7 +236,7 @@ trait InGameAnswer extends MathUtils {
       intToByteArray(_local_11) ++
       byteToByteArray(karma) ++
       byteToByteArray(sex) ++
-      SetEncodedArray6(x,y,x1,y1,sy,sx) ++
+      SetEncodedArray6(x, y, x1, y1, sy, sx) ++
       stringToByteArray("", 2) ++
       shortToByteArray(baseLevel)
     Answer(ByteString(arr))

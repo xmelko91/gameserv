@@ -1,7 +1,8 @@
 package utils.parsing
 
 import akka.http.scaladsl.model.DateTime
-import akka.util.ByteString
+import app.actors.inGame.InGamePlayer.{CalculatedStats, CharBaseStats}
+import utils.sqlutils.MapSQL.ItemsSet
 
 trait MathUtils extends DataFunc {
 
@@ -56,11 +57,39 @@ trait MathUtils extends DataFunc {
     (dir & 0x0F).shortValue()
   }
 
-  def StatsCalculatind = (stats: CharStats) => {
+  def StatsCalculating(stats: CharBaseStats, playerItems: Array[ItemsSet]): CalculatedStats = {
+    val statsCount = stats.statCout // количество свободных очков
+    val strA = upgradePrice(stats.str)
+    val agiA = upgradePrice(stats.agi)
+    val dexA = upgradePrice(stats.dex)
+    val intA = upgradePrice(stats.int)
+    val vitA = upgradePrice(stats.vit)
+    val lukA = upgradePrice(stats.luk)
+    val atk1 = 0
+    val atk2 = 10
+    val mAtkMin = 0
+    val mAtkMax = 10
+    val def1 = 0
+    val def2 = 10
+    val mdef1 = 0
+    val mdef2 = 10
+    val hit = 50
+    val flee1 = 0
+    val flee2 = 10
+    val critical = 10
+    val karma = 10
+    val manner = 1
 
+
+    CalculatedStats(statsCount, stats.str, strA,
+      stats.agi, agiA, stats.vit, vitA, stats.int, intA, stats.dex, dexA, stats.luk, lukA,
+      atk1, atk2, mAtkMax, mAtkMin, def1, def2, mdef1, mdef2, hit, flee1, flee2, critical, karma, manner)
   }
 
-  case class CharStats(str: Short, agi: Short, vit: Short, int: Short, dex: Short, luk: Short)
+  def upgradePrice(v: Short):Short = ((v + 9) / 10).shortValue()
+
+
+
   case class Cords3(x: Short, y: Short, dir: Short)
   case class Cords6(x: Short, y: Short, x1: Short, y1: Short, sy0: Short, sx0: Short)
 
