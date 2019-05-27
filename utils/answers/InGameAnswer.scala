@@ -4,6 +4,9 @@ import akka.http.scaladsl.model.DateTime
 import akka.util.ByteString
 import app.actors.inGame.InGamePlayer.CalculatedStats
 import utils.parsing.MathUtils
+import utils.sqlutils.MapSQL.ItemsSet
+
+import scala.collection.mutable.ArrayBuffer
 
 trait InGameAnswer extends MathUtils {
 
@@ -55,6 +58,45 @@ trait InGameAnswer extends MathUtils {
     val arr = shortToByteArray(142) ++
       intToByteArray(message.length + 4) ++
       stringToByteArray(message, 0)
+    Answer(ByteString(arr))
+  }
+
+  def pocket164Answer(items: Array[ItemsSet]): Answer = {
+    var buf = Array[Byte]()
+    val It = items.filter(x => x.iemParams.tyype > 0)
+    It.foreach(I => {
+      buf  = buf ++ shortToByteArray(I.item.id.intValue()) ++
+        shortToByteArray(I.item.nameId) ++
+        byteToByteArray(I.item.tyype) ++
+        byteToByteArray(I.item.identified) ++
+        shortToByteArray(I.item.typeEquip) ++
+        shortToByteArray(I.item.equip) ++
+        byteToByteArray(I.item.attr) ++
+        byteToByteArray(I.item.upgrade)
+      /*for (x <- 0 to I.iemParams.slots){
+        if (x < 4){
+          buf = buf ++ shortToByteArray(x match {
+            case 0 => I.item.slot1.intValue()
+            case 1 => I.item.slot2.intValue()
+            case 2 => I.item.slot3.intValue()
+            case 3 => I.item.slot4.intValue()
+          })
+        }else{
+          buf  = buf ++ intToByteArray(x match {
+            case 4 => I.item.others1
+            case 5 => I.item.others2
+            case 6 => I.item.others3
+            case 7 => I.item.others4
+            case 8 => I.item.others5
+            case 9 => I.item.others6
+          })
+        }
+      }*/
+    })
+    println(It.length)
+    val arr = shortToByteArray(164) ++
+      shortToByteArray(It.length * 44 + 4) ++
+      buf
     Answer(ByteString(arr))
   }
 
@@ -165,6 +207,43 @@ trait InGameAnswer extends MathUtils {
       shortToByteArray(l6) ++
       stringToByteArray("", 6) ++
       stringToByteArray(message, message.length)
+    Answer(ByteString(arr))
+  }
+
+  def pocket494Answer(items: Array[ItemsSet]): Answer = {
+    var buf = Array[Byte]()
+    val It = items.filter(x => x.iemParams.tyype <= 0)
+    It.foreach(I => {
+      buf  = buf ++ shortToByteArray(I.item.id.intValue()) ++
+        shortToByteArray(I.item.nameId) ++
+        byteToByteArray(I.item.tyype) ++
+        byteToByteArray(0) ++
+        shortToByteArray(I.item.amount) ++
+        shortToByteArray(I.item.typeEquip)
+      /*for (x <- 0 to I.iemParams.slots){
+        if (x < 4){
+          buf = buf ++ shortToByteArray(x match {
+            case 0 => I.item.slot1.intValue()
+            case 1 => I.item.slot2.intValue()
+            case 2 => I.item.slot3.intValue()
+            case 3 => I.item.slot4.intValue()
+          })
+        }else{
+          buf  = buf ++ intToByteArray(x match {
+            case 4 => I.item.others1
+            case 5 => I.item.others2
+            case 6 => I.item.others3
+            case 7 => I.item.others4
+            case 8 => I.item.others5
+            case 9 => I.item.others6
+          })
+        }
+      }*/
+    })
+    println(items.length)
+    val arr = shortToByteArray(164) ++
+      shortToByteArray(It.length * 42 + 4) ++
+      buf
     Answer(ByteString(arr))
   }
 

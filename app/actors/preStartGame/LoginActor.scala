@@ -35,7 +35,9 @@ class LoginActor extends Actor
     case LoginData(data, ref) => {
       //получает распарсенную дату, кортеж в виде всех полей
       val parsedData = parsePocket100(data)
-      val info = UserInfo(parsedData.email, parsedData.password, ref)
+      val pass = md5(parsedData.password)
+      println(pass)
+      val info = UserInfo(parsedData.email, pass, ref)
 
       //проверяем и добавляем в буфер не зареганых юзеров
       //isInfoInMemory(info)
@@ -48,7 +50,7 @@ class LoginActor extends Actor
         }
         else {
           //запрос акка из БД
-          val future = context.actorSelection(ActorPath("SQL")) ? CheckUserInDB(parsedData.email, parsedData.password)
+          val future = context.actorSelection(ActorPath("SQL")) ? CheckUserInDB(parsedData.email, pass)
           val result = Await.result(future, timeout.duration).asInstanceOf[PlayerLoginStats]
 
           result match {
@@ -120,6 +122,7 @@ class LoginActor extends Actor
           val characterInfo = CharacterInfo(parsedData._nickname, job.jobId, isMale.shortValue(), job.fraction, 1, parsedData._slotid)
 
           val future = SqlSend ? AddNewCharacter(info, characterInfo, user.userId)
+          println("Added new character")
           val result = Await.result(future, timeout.duration).asInstanceOf[(Long, Long)]
           val loginID = result._2
           val charID = result._1
@@ -127,6 +130,8 @@ class LoginActor extends Actor
           //добавление базовых предметов персонажу
           context.actorSelection(ActorPath("Map/MapSQL")) ! AddNewItem(charID, 31000)
           context.actorSelection(ActorPath("Map/MapSQL")) ! AddNewItem(charID, 20450)
+          context.actorSelection(ActorPath("Map/MapSQL")) ! AddNewItem(charID, 31002, 10)
+
 
 
           UserId += NewUserId(loginID, charID, ref, 0)

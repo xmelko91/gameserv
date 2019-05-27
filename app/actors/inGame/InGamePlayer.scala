@@ -8,7 +8,7 @@ import app.Settings.ActorPath
 import utils.answers.InGameAnswer
 import utils.parsing.InGameParse
 import akka.pattern.ask
-import app.actors.inGame.InGamePlayer.{CalculatedStats, CharBaseStats, Cords, PlayerMessage, UpStat}
+import app.actors.inGame.InGamePlayer.{CalculatedStats, CharBaseStats, CharacterCoordinates, Cords, PlayerMessage, UpStat}
 import utils.sqlutils.MapSQL.{CordsSearch, GetAllItems, ItemsSet}
 
 import scala.concurrent.Await
@@ -30,12 +30,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
   var charId: Long = 0
   var gold: Long = 0
   var timer: Long = 0
-  var dir: Short = 0
-  var x: Short = 0
-  var y: Short = 0
-  var dir1: Short = 0
-  var x1: Short = 0
-  var y1: Short = 0
+  var PC: CharacterCoordinates = _
   var map: String = ""
   var playerItems: Array[ItemsSet] = _
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
@@ -55,11 +50,14 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
       case 125 =>
         val s: CalculatedStats = StatsCalculating(stats, playerItems)
         println("125 p " + data)
+
         player ! Write(pocket554Answer(this.charId,3,0,0,0,this.jobId,1,
           0,0,0,this.hairColor,this.race,0,0,0,0,this.sex,
-          encodeCord(this.x), encodeCord(this.y), encodeDir(this.dir), this.isGM, 0,1).data)
-        player ! Write(pocket189Answer(s).data)
+          encodeCord(this.PC.X), encodeCord(this.PC.Y), encodeDir(this.PC.DIR), this.isGM, 0,1).data)
 
+        player ! Write(pocket189Answer(s).data)
+        player ! Write(pocket164Answer(playerItems).data)
+        //player ! Write(pocket494Answer(playerItems).data)
 
       case 137 =>
         println("137 p")
@@ -68,12 +66,12 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
         val ar = GetEncoded3(Array(pData.x, pData.y, pData.dir))
 
 
-        player ! Write(pocket556Answer(charId, 2, 0, 0, 0, this.jobId,
-          0, 1, 1, 0, this.hairColor, this.race, 0, 0, 0, 0, this.sex,
-          this.x1, this.y1, ar.x, ar.y, 0, 0, this.baseLvl).data)
-        this.x1 = pData.x
-        this.y1 = pData.y
-        this.dir1 = pData.dir
+        player ! Write(pocket556Answer(charId, 1, 0, 0, 0, this.jobId,
+          0, 1, 1, 0, this.hairColor, this.race, 0, 0, 1, 0, this.sex,
+          this.PC.X1, this.PC.Y1, ar.x, ar.y, 0, 0, this.baseLvl).data)
+        this.PC.X1 = pData.x
+        this.PC.Y1 = pData.y
+        this.PC.DIR1 = pData.dir
 
 
       case 159 => //chat message - 141back
@@ -102,6 +100,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
       case 187 =>
         val pData = parsePocket187(data)
         println(pData)
+        def refreshStats(skillCount: Int) = Write(pocket176Answer(9, skillCount).data)
         try {
           pData.stat match {
             case 13 => //str
@@ -114,6 +113,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
                 this.stats.str = res._1
                 this.stats.skillCount = res._2
                 player ! Write(pocket188Answer(1, 13, this.stats.str).data)
+                player ! refreshStats(this.stats.skillCount)
                 //отправляем паккет ОК
               }
             case 14 => //agi
@@ -126,6 +126,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
                 this.stats.agi = res._1
                 this.stats.skillCount = res._2
                 player ! Write(pocket188Answer(1, 14, this.stats.agi).data)
+                player ! refreshStats(this.stats.skillCount)
                 //отправляем паккет ОК
               }
             case 15 => //vit
@@ -138,6 +139,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
                 this.stats.vit = res._1
                 this.stats.skillCount = res._2
                 player ! Write(pocket188Answer(1, 15, this.stats.vit).data)
+                player ! refreshStats(this.stats.skillCount)
                 //отправляем паккет ОК
               }
             case 16 => //int
@@ -150,6 +152,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
                 this.stats.int = res._1
                 this.stats.skillCount = res._2
                 player ! Write(pocket188Answer(1, 16, this.stats.int).data)
+                player ! refreshStats(this.stats.skillCount)
                 //отправляем паккет ОК
               }
             case 17 => //dex
@@ -162,6 +165,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
                 this.stats.dex = res._1
                 this.stats.skillCount = res._2
                 player ! Write(pocket188Answer(1, 17, this.stats.dex).data)
+                player ! refreshStats(this.stats.skillCount)
                 //отправляем паккет ОК
               }
             case 18 => //luk
@@ -174,6 +178,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
                 this.stats.luk = res._1
                 this.stats.skillCount = res._2
                 player ! Write(pocket188Answer(1, 18, this.stats.luk).data)
+                player ! refreshStats(this.stats.skillCount)
                 //отправляем паккет ОК
               }
           }
@@ -197,12 +202,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
         this.isGM = cords.isGm
         this.premiumType = cords.premiumType
         this.gold = cords.gold
-        this.x = cords.x
-        this.y = cords.y
-        this.dir = cords.dir
-        this.x1 = cords.x1
-        this.y1 = cords.y1
-        this.dir1 = cords.dir1
+        this.PC = new CharacterCoordinates(cords.x, cords.y, cords.dir, cords.x1, cords.y1, cords.dir1)
         this.map = cords.map
         this.baseLvl = cords.baseLvl
         this.jobId = cords.jobId
@@ -279,6 +279,15 @@ object InGamePlayer {
     var luk: Short = lu
     var skillCount: Short = skillCoun
     var statCout: Short = statCou
+  }
+
+  class CharacterCoordinates(x:Short, y:Short, dir: Short, x1:Short, y1:Short, dir1:Short){
+    var X: Short = x
+    var Y: Short = y
+    var DIR: Short = dir
+    var X1: Short = x1
+    var Y1: Short = y1
+    var DIR1: Short = dir1
   }
 
   case class PlayerMessage(message: String, messageLength: Int, charId: Long, isGm: Int, baseLvl: Int, premiumType: Short, race: Short)

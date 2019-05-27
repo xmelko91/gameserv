@@ -94,7 +94,7 @@ class MapSQL extends Actor with MathUtils{
       }
     }
 
-    case AddNewItem(id, nameId) => {
+    case AddNewItem(id, nameId, amount) => {
 
       if (connection == null || connection.isClosed) connect()
       try {
@@ -108,13 +108,15 @@ class MapSQL extends Actor with MathUtils{
         var i = 1
         val addState = connection.
           prepareStatement("INSERT INTO `" + dbName +
-            "`.`player_items` (`Id`, `NameId`, `Type`) VALUES (?, ?, ?);")
+            "`.`player_items` (`Id`, `NameId`, `Type`, `amount`) VALUES (?, ?, ?, ?);")
 
         addState.setLong(i, id)
         i += 1
         addState.setShort(i, rs.getShort("NameId"))
         i += 1
         addState.setShort(i, rs.getShort("type"))
+        i += 1
+        addState.setInt(i, amount)
 
         addState.executeUpdate()
 
@@ -156,7 +158,8 @@ class MapSQL extends Actor with MathUtils{
       val out = new ArrayBuffer[ItemsSet]()
       if (connection == null || connection.isClosed) connect()
       try {
-        val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`player_items` WHERE `id` = ?;")
+        val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`player_items` WHERE `Id` = ?;")
+        println(id)
         statement.setLong(1, id)
         val rs = statement.executeQuery()
         while (rs.next()){
@@ -177,11 +180,12 @@ class MapSQL extends Actor with MathUtils{
           val others4 = rs.getLong("others_4")
           val others5 = rs.getLong("others_5")
           val others6 = rs.getLong("others_6")
+          val amount = rs.getInt("amount")
 
           val pItem = CharItem(id, nameId, tyype,
             identified, typeEquip, equip, attr,
             upgrade, slot1, slot2, slot3, slot4,
-            others1, others2, others3, others4, others5, others6)
+            others1, others2, others3, others4, others5, others6, amount)
 
           val iState = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`items` WHERE `NameId` = ?;")
           iState.setShort(1, nameId.shortValue())
@@ -234,7 +238,7 @@ object MapSQL {
 
   case class GetAllItems(charId: Long)
 
-  case class AddNewItem(charId: Long, nameId: Short)
+  case class AddNewItem(charId: Long, nameId: Short, amount: Int = 1)
 
   case class CordsSearch(CharacterId: Long, x: Short = 0, y: Short = 0, dir: Short = 0)
 
@@ -256,7 +260,8 @@ object MapSQL {
                        others3: Long,
                        others4: Long,
                        others5: Long,
-                       others6: Long
+                       others6: Long,
+                       amount: Int
                      )
 
   case class ItemParams(

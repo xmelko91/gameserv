@@ -53,11 +53,14 @@ trait CheckBase {
     false
   }
 
-  def md5(s: Array[Byte]): Array[Byte] = {
-    MessageDigest.getInstance("MD5").digest(s)
+  def md5(s: Array[Byte]): String= {
+    MessageDigest.getInstance("MD5").toString
   }
-  def md5(s: String): Array[Byte] = {
-    MessageDigest.getInstance("MD5").digest(s.getBytes())
+  def md5(s: String): String = {
+    val arr = new ArrayBuffer[String]()
+    s.foreach(c => arr += (c.toByte % 10).toString)
+    arr.mkString("")
+    //arr.reduce((a,b) => a + b)
   }
 
 }

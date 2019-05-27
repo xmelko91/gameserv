@@ -34,6 +34,8 @@ class SQLActor extends Actor with DataFunc {
     connection = DriverManager.getConnection(url, p)
   }
 
+  override def preStart(): Unit = println("SQL started " + context.self.path)
+
   override def receive: Receive = {
 
 
