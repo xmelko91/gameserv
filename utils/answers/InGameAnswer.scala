@@ -3,6 +3,7 @@ package utils.answers
 import akka.http.scaladsl.model.DateTime
 import akka.util.ByteString
 import app.actors.inGame.InGamePlayer.CalculatedStats
+import app.actors.inGame.MapInstance.NPC
 import utils.parsing.MathUtils
 import utils.sqlutils.MapSQL.ItemsSet
 
@@ -17,6 +18,26 @@ trait InGameAnswer extends MathUtils {
       byteToByteArray(y) ++
       byteToByteArray(dir) ++
       shortToByteArray(0)
+    Answer(ByteString(arr))
+  }
+
+  def pocket120Answer(npc: NPC): Answer = {
+    val arr = shortToByteArray(120) ++
+      byteToByteArray(0) ++
+      intToByteArray(npc.charIndex) ++
+      shortToByteArray(npc.walkSpeed)++
+      shortToByteArray(npc.local4) ++
+      shortToByteArray(npc.local5) ++
+      shortToByteArray(npc.local6) ++
+      shortToByteArray(npc.jobId) ++
+      stringToByteArray("", 29) ++
+      byteToByteArray(npc.sex) ++
+      byteToByteArray(encodeCord(npc.x)) ++
+      byteToByteArray(encodeCord(npc.y)) ++
+      byteToByteArray(encodeCord(npc.dir)) ++
+      shortToByteArray(0) ++
+      byteToByteArray(npc.isDead) ++
+      shortToByteArray(npc.baseLvl)
     Answer(ByteString(arr))
   }
 
@@ -61,39 +82,36 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
+  def pocket149Answer(nick: String, id: Long):Answer = {
+    val arr = shortToByteArray(149) ++
+      intToByteArray(id) ++
+      stringToByteArray(nick, 24)
+    Answer(ByteString(arr))
+  }
   def pocket164Answer(items: Array[ItemsSet]): Answer = {
-    var buf = Array[Byte]()
+    var buf = new Array[Byte](0)
     val It = items.filter(x => x.iemParams.tyype > 0)
-    It.foreach(I => {
-      buf  = buf ++ shortToByteArray(I.item.id.intValue()) ++
-        shortToByteArray(I.item.nameId) ++
-        byteToByteArray(I.item.tyype) ++
-        byteToByteArray(I.item.identified) ++
-        shortToByteArray(I.item.typeEquip) ++
-        shortToByteArray(I.item.equip) ++
-        byteToByteArray(I.item.attr) ++
-        byteToByteArray(I.item.upgrade)
-      /*for (x <- 0 to I.iemParams.slots){
-        if (x < 4){
-          buf = buf ++ shortToByteArray(x match {
-            case 0 => I.item.slot1.intValue()
-            case 1 => I.item.slot2.intValue()
-            case 2 => I.item.slot3.intValue()
-            case 3 => I.item.slot4.intValue()
-          })
-        }else{
-          buf  = buf ++ intToByteArray(x match {
-            case 4 => I.item.others1
-            case 5 => I.item.others2
-            case 6 => I.item.others3
-            case 7 => I.item.others4
-            case 8 => I.item.others5
-            case 9 => I.item.others6
-          })
-        }
-      }*/
-    })
-    println(It.length)
+    for (i <- It) {
+      buf = buf ++
+        shortToByteArray(i.iemParams.id) ++
+        shortToByteArray(i.item.nameId) ++
+        byteToByteArray(i.item.tyype) ++
+        byteToByteArray(i.item.identified) ++
+        shortToByteArray(i.item.typeEquip) ++
+        shortToByteArray(i.item.equip) ++
+        byteToByteArray(i.item.attr) ++
+        byteToByteArray(i.item.upgrade) ++
+        shortToByteArray(i.item.slot1.intValue()) ++
+        shortToByteArray(i.item.slot2.intValue()) ++
+        shortToByteArray(i.item.slot3.intValue()) ++
+        shortToByteArray(i.item.slot4.intValue()) ++
+        intToByteArray(0) ++
+        intToByteArray(0) ++
+        intToByteArray(0) ++
+        intToByteArray(0) ++
+        intToByteArray(0) ++
+        intToByteArray(0)
+    }
     val arr = shortToByteArray(164) ++
       shortToByteArray(It.length * 44 + 4) ++
       buf
@@ -129,7 +147,7 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  def pocket188Answer(operEnd:Short, statN: Int, stat:Short): Answer = {
+  def pocket188Answer(operEnd: Short, statN: Int, stat: Short): Answer = {
     val arr = shortToByteArray(188) ++
       shortToByteArray(statN) ++
       byteToByteArray(operEnd) ++
@@ -211,37 +229,28 @@ trait InGameAnswer extends MathUtils {
   }
 
   def pocket494Answer(items: Array[ItemsSet]): Answer = {
-    var buf = Array[Byte]()
+    var buf = new Array[Byte](0)
     val It = items.filter(x => x.iemParams.tyype <= 0)
     It.foreach(I => {
-      buf  = buf ++ shortToByteArray(I.item.id.intValue()) ++
+      buf = buf ++
+        shortToByteArray(I.iemParams.id) ++
         shortToByteArray(I.item.nameId) ++
         byteToByteArray(I.item.tyype) ++
         byteToByteArray(0) ++
         shortToByteArray(I.item.amount) ++
-        shortToByteArray(I.item.typeEquip)
-      /*for (x <- 0 to I.iemParams.slots){
-        if (x < 4){
-          buf = buf ++ shortToByteArray(x match {
-            case 0 => I.item.slot1.intValue()
-            case 1 => I.item.slot2.intValue()
-            case 2 => I.item.slot3.intValue()
-            case 3 => I.item.slot4.intValue()
-          })
-        }else{
-          buf  = buf ++ intToByteArray(x match {
-            case 4 => I.item.others1
-            case 5 => I.item.others2
-            case 6 => I.item.others3
-            case 7 => I.item.others4
-            case 8 => I.item.others5
-            case 9 => I.item.others6
-          })
-        }
-      }*/
+        shortToByteArray(I.item.typeEquip) ++
+        shortToByteArray(I.item.slot1.intValue()) ++
+        shortToByteArray(I.item.slot2.intValue()) ++
+        shortToByteArray(I.item.slot3.intValue()) ++
+        shortToByteArray(I.item.slot4.intValue()) ++
+        intToByteArray(I.item.others1) ++
+        intToByteArray(I.item.others2) ++
+        intToByteArray(I.item.others3) ++
+        intToByteArray(I.item.others4) ++
+        intToByteArray(I.item.others5) ++
+        intToByteArray(I.item.others6)
     })
-    println(items.length)
-    val arr = shortToByteArray(164) ++
+    val arr = shortToByteArray(494) ++
       shortToByteArray(It.length * 42 + 4) ++
       buf
     Answer(ByteString(arr))
@@ -342,9 +351,9 @@ trait InGameAnswer extends MathUtils {
     Answer(ByteString(arr))
   }
 
-  def pocketGold(gold: Long): Answer = {
+  def pocketGold(gold: Long, kafra: Long): Answer = {
     val arr = shortToByteArray(1024) ++
-      intToByteArray(gold)
+      intToByteArray(gold) ++ intToByteArray(kafra)
     Answer(ByteString(arr))
   }
 

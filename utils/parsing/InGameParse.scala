@@ -60,8 +60,7 @@ trait InGameParse extends DataFunc with MathUtils {
 
   def parsePocket155(data: ByteString): ParsedData155 = {
     val arr = new ByteArrayInputStream(data.toArray)
-    arr.readNBytes(2)
-    arr.readNBytes(4)
+    arr.readNBytes(6)
     val charId = readUInteger(arr.readNBytes(4))
     arr.close()
     ParsedData155(charId)

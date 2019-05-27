@@ -6,6 +6,7 @@ import java.util.Properties
 
 import akka.actor.Actor
 import app.actors.inGame.InGamePlayer._
+import app.actors.inGame.MapInstance.{MapNpc, NPC}
 import utils.parsing.MathUtils
 
 import scala.collection.mutable.ArrayBuffer
@@ -159,7 +160,6 @@ class MapSQL extends Actor with MathUtils{
       if (connection == null || connection.isClosed) connect()
       try {
         val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`player_items` WHERE `Id` = ?;")
-        println(id)
         statement.setLong(1, id)
         val rs = statement.executeQuery()
         while (rs.next()){
@@ -227,6 +227,43 @@ class MapSQL extends Actor with MathUtils{
         case e:Throwable => sender() ! out.toArray
       }
     }
+
+    case MapNpc(name) =>
+      val out = new ArrayBuffer[(NPC, Boolean)]()
+      if (connection == null || connection.isClosed) connect()
+      try {
+        val statement = connection.prepareStatement("SELECT * FROM `" + dbName + "`.`npc` WHERE `MapName` = ?;")
+        statement.setString(1, name)
+        val rs = statement.executeQuery()
+        while (rs.next()){
+          val id = rs.getLong("Id")
+          val walkSpeed = rs.getShort("walkSpeed")
+          val l4 = rs.getShort("_local_4")
+          val l5 = rs.getShort("_local_5")
+          val l6 = rs.getShort("_local_6")
+          val jobId = rs.getShort("jobId")
+          val sex = rs.getShort("sex")
+          val x = rs.getShort("x")
+          val y = rs.getShort("y")
+          val dir = rs.getShort("dir")
+          val isDead = rs.getShort("isDead")
+          val baseLevel = rs.getShort("baseLevel")
+          val scriptName = rs.getString("ScriptName")
+          val name = rs.getString("Name")
+          val icon = rs.getShort("Icon")
+          val chIndex = rs.getShort("CharacterIndex")
+          val mapName = name
+          val desc = rs.getString("Description")
+          val mMap = rs.getInt("MainMap")
+          val tyype = rs.getInt("Type")
+          val npc = (NPC(id,walkSpeed,l4,l5,l6,jobId,sex,x,y,dir,isDead,baseLevel,scriptName,name,icon,chIndex,mapName,desc,mMap, tyype), false)
+          out += npc
+        }
+
+        sender() ! out.toArray
+      }catch {
+        case e:Throwable => sender() ! out.toArray
+      }
 
     case _ => println
   }

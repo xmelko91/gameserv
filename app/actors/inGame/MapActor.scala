@@ -26,13 +26,14 @@ class MapActor extends Actor{
     val maps = new ArrayBuffer[String]()
     maps += "city00"
 
+    context.actorOf(Props(classOf[MapSQL]), name = "MapSQL")
+
     for (map <- maps){
       println("creating map " + map)
       context.actorOf(Props(classOf[MapInstance]), name = map)
     }
 
 
-    context.actorOf(Props(classOf[MapSQL]), name = "MapSQL")
   }
 
   override def receive: Receive = {

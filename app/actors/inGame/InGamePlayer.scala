@@ -9,6 +9,7 @@ import utils.answers.InGameAnswer
 import utils.parsing.InGameParse
 import akka.pattern.ask
 import app.actors.inGame.InGamePlayer.{CalculatedStats, CharBaseStats, CharacterCoordinates, Cords, PlayerMessage, UpStat}
+import app.actors.inGame.MapInstance.NPC
 import utils.sqlutils.MapSQL.{CordsSearch, GetAllItems, ItemsSet}
 
 import scala.concurrent.Await
@@ -33,6 +34,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
   var PC: CharacterCoordinates = _
   var map: String = ""
   var playerItems: Array[ItemsSet] = _
+  var NPCs: Array[(NPC, Boolean)] = _
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
 
 
@@ -45,19 +47,27 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
       if (this.race == msg.race || msg.premiumType == 2 || this.premiumType == 1 || this.premiumType == 2) pon = 0
       player ! Write(pocket141Answer(msg.charId, msg.isGm, msg.baseLvl, msg.premiumType, pon, msg.message, msg.messageLength).data)
 
+    case a:Array[(NPC, Boolean)] => {
+      NPCs = a
+    }
+
 
     case Received(data) => pocketNumber(data) match {
       case 125 =>
         val s: CalculatedStats = StatsCalculating(stats, playerItems)
         println("125 p " + data)
+        player ! Write(pocket189Answer(s).data)
+        NPCs.foreach(p => player ! Write(pocket120Answer(p._1).data))
+
 
         player ! Write(pocket554Answer(this.charId,3,0,0,0,this.jobId,1,
           0,0,0,this.hairColor,this.race,0,0,0,0,this.sex,
           encodeCord(this.PC.X), encodeCord(this.PC.Y), encodeDir(this.PC.DIR), this.isGM, 0,1).data)
 
-        player ! Write(pocket189Answer(s).data)
+        player ! Write(pocket494Answer(playerItems).data)
         player ! Write(pocket164Answer(playerItems).data)
-        //player ! Write(pocket494Answer(playerItems).data)
+
+
 
       case 137 =>
         println("137 p")
@@ -72,6 +82,9 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
         this.PC.X1 = pData.x
         this.PC.Y1 = pData.y
         this.PC.DIR1 = pData.dir
+
+      case 155 =>
+        sender() ! Write(pocket149Answer(this.nickName, this.charId).data)
 
 
       case 159 => //chat message - 141back
@@ -225,7 +238,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
 
       case 1048 =>
         println("1048 here " + gold)
-        player ! Write(pocketGold(gold).data)
+        player ! Write(pocketGold(gold, 0).data)
 
       case 1049 =>
       //quest logic
@@ -235,10 +248,8 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
         player ! Write(pocket127Answer().data)
 
       case 1096 => //список друзей - 1097 ответ
-        println("1096 here")
         val pData = parsePocket1096(data)
-        println(data)
-        println(pData)
+
 
       case _ => println(pocketNumber(data))
     }

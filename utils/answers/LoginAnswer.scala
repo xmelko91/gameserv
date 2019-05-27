@@ -6,18 +6,16 @@ import utils.answers.CharacterAnswer.CharStats
 import utils.parsing.DataFunc
 import utils.sqlutils.SQLActor.PlayerLoginStats
 
-import scala.collection.mutable.ArrayBuffer
-
 trait LoginAnswer extends DataFunc {
 
 
   import app.Settings._
 
 
-  var adress1: Byte = TCP_IP._1
-  var adress2: Byte = TCP_IP._2
-  var adress3: Byte = TCP_IP._3
-  var adress4: Byte = TCP_IP._4
+  var adress1: Short = TCP_IP._1
+  var adress2: Short = TCP_IP._2
+  var adress3: Short = TCP_IP._3
+  var adress4: Short = TCP_IP._4
   var port: Short = TCP_IP._5
 
 
