@@ -8,10 +8,11 @@ import app.Settings.ActorPath
 import utils.answers.InGameAnswer
 import utils.parsing.InGameParse
 import akka.pattern.ask
-import app.actors.inGame.InGamePlayer.{CalculatedStats, CharBaseStats, CharacterCoordinates, Cords, PlayerMessage, UpStat}
+import app.actors.inGame.InGamePlayer.{CalculatedStats, CharBaseStats, CharacterCoordinates, Cords, NpcOnMap, PlayerMessage, UpStat}
 import app.actors.inGame.MapInstance.NPC
 import utils.sqlutils.MapSQL.{CordsSearch, GetAllItems, ItemsSet}
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
@@ -34,7 +35,7 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
   var PC: CharacterCoordinates = _
   var map: String = ""
   var playerItems: Array[ItemsSet] = _
-  var NPCs: Array[(NPC, Boolean)] = _
+  var NPCs: ArrayBuffer[NpcOnMap] = new ArrayBuffer[NpcOnMap]()
   implicit val timeout: Timeout = Timeout(Duration.create(5, "seconds"))
 
 
@@ -48,17 +49,18 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
       player ! Write(pocket141Answer(msg.charId, msg.isGm, msg.baseLvl, msg.premiumType, pon, msg.message, msg.messageLength).data)
 
     case a:Array[(NPC, Boolean)] => {
-      NPCs = a
+      for (x <- a.indices){
+        NPCs += new NpcOnMap(a(x)._1, a(x)._2)
+      }
     }
 
 
     case Received(data) => pocketNumber(data) match {
       case 125 =>
         val s: CalculatedStats = StatsCalculating(stats, playerItems)
-        println("125 p " + data)
+        println("125 p " + this.PC.X + "  " + this.PC.Y)
         player ! Write(pocket189Answer(s).data)
-        NPCs.foreach(p => player ! Write(pocket120Answer(p._1).data))
-
+        sendNPC
 
         player ! Write(pocket554Answer(this.charId,3,0,0,0,this.jobId,1,
           0,0,0,this.hairColor,this.race,0,0,0,0,this.sex,
@@ -70,11 +72,9 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
 
 
       case 137 =>
-        println("137 p")
         val pData = parsePocket137(data)
-        println(data)
-        val ar = GetEncoded3(Array(pData.x, pData.y, pData.dir))
-
+        var ar = GetEncoded3(Array(pData.x, pData.y, pData.dir))
+        println("x " + ar.x + " y " + ar.y)
 
         player ! Write(pocket556Answer(charId, 1, 0, 0, 0, this.jobId,
           0, 1, 1, 0, this.hairColor, this.race, 0, 0, 1, 0, this.sex,
@@ -82,9 +82,20 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
         this.PC.X1 = pData.x
         this.PC.Y1 = pData.y
         this.PC.DIR1 = pData.dir
+        this.PC.X = ar.x
+        this.PC.Y = ar.y
+        this.PC.DIR = ar.dir
+
 
       case 155 =>
-        sender() ! Write(pocket149Answer(this.nickName, this.charId).data)
+        val id = parsePocket155(data).charId
+        println(id)
+        if (id >= 100000000){
+          val toSendId = NPCs.filter(p => p.Npc.Id == id).head
+          NPCs -= toSendId
+          sender() ! Write(pocket149Answer(toSendId.Npc.scriptName, id).data)
+        } else
+          sender() ! Write(pocket149Answer(this.nickName, this.charId).data)
 
 
       case 159 => //chat message - 141back
@@ -233,8 +244,10 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
 
       case 278 =>
         //val pData = parsePocket278(data)
+        //println("tick")
         val date = DateTime.now
         player ! Write(pocket1059Answer(date).data)
+        sendNPC
 
       case 1048 =>
         println("1048 here " + gold)
@@ -261,6 +274,14 @@ class InGamePlayer extends Actor with InGameParse with InGameAnswer {
       println("In-game actor died")
       self ! PoisonPill
   }
+
+  def sendNPC = NPCs.filter(p => {
+    (p.xE > this.PC.X - 30) && (p.xE < this.PC.X + 30) && (p.yE > this.PC.Y - 30) && (p.yE < this.PC.Y + 30) && !p.isShowed
+  })
+    .foreach(p =>{
+      println("send " + p.Npc.name + " x " + p.Npc.x + " y " + p.Npc.y)
+      player ! Write(pocket120Answer(p.Npc).data)
+    })
 
   def MapSend: ActorSelection = context.actorSelection(ActorPath("Map/" + this.map))
 
@@ -301,6 +322,19 @@ object InGamePlayer {
     var DIR1: Short = dir1
   }
 
+  class NpcOnMap(npc: NPC, showed: Boolean){
+    val DIRS: Array[Short] = Array(0, 7, 6, 5, 4, 3, 2, 1)
+
+    val Npc: NPC = npc
+    var isShowed: Boolean = showed
+
+    val arr = Array(Npc.x, Npc.y, Npc.dir)
+
+    val xE: Int = ((arr(0) << 2) | (arr(1) >> 6)) & 0x03FF
+    val yE: Int = ((arr(1) << 4) | (arr(2) >> 4)) & 0x03FF
+    val dirE:Short = DIRS(arr(2) & 0x0F)
+
+  }
   case class PlayerMessage(message: String, messageLength: Int, charId: Long, isGm: Int, baseLvl: Int, premiumType: Short, race: Short)
 
   case class Cords(CharacterId: Long, x: Short = 0, x1: Short, y: Short = 0, y1: Short, dir: Short = 0, dir1:Short,

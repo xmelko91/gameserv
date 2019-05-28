@@ -24,7 +24,7 @@ trait InGameAnswer extends MathUtils {
   def pocket120Answer(npc: NPC): Answer = {
     val arr = shortToByteArray(120) ++
       byteToByteArray(0) ++
-      intToByteArray(npc.charIndex) ++
+      intToByteArray(npc.Id) ++
       shortToByteArray(npc.walkSpeed)++
       shortToByteArray(npc.local4) ++
       shortToByteArray(npc.local5) ++
